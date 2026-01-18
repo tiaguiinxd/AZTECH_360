@@ -15,8 +15,10 @@ interface ApiOptions {
 async function apiRequest<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
   const { method = 'GET', body } = options
 
-  // Garantir trailing slash para evitar redirect 307 do FastAPI
-  const normalizedEndpoint = endpoint.endsWith('/') || endpoint.includes('?')
+  // Garantir trailing slash APENAS para endpoints de coleção (sem path params)
+  // Endpoints com path params (ex: /colaboradores/123) NÃO devem ter trailing slash
+  const hasPathParam = /\/\d+/.test(endpoint) // Verifica se tem /123, /456, etc
+  const normalizedEndpoint = endpoint.endsWith('/') || endpoint.includes('?') || hasPathParam
     ? endpoint
     : `${endpoint}/`
 

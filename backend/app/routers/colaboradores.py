@@ -5,7 +5,7 @@ from typing import Set
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Colaborador
+from ..models import Colaborador, Setor, NivelHierarquico, Subnivel
 from ..schemas import ColaboradorCreate, ColaboradorUpdate, ColaboradorResponse
 
 router = APIRouter(prefix="/colaboradores", tags=["Colaboradores"])
@@ -84,6 +84,38 @@ def get_colaborador(colaborador_id: int, db: Session = Depends(get_db)):
 @router.post("/", response_model=ColaboradorResponse, status_code=201)
 def create_colaborador(colaborador: ColaboradorCreate, db: Session = Depends(get_db)):
     """Cria um novo colaborador"""
+    # Validar setor_id
+    setor = db.query(Setor).filter(Setor.id == colaborador.setor_id).first()
+    if not setor:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Setor com ID {colaborador.setor_id} não encontrado"
+        )
+
+    # Validar nivel_id
+    nivel = db.query(NivelHierarquico).filter(NivelHierarquico.id == colaborador.nivel_id).first()
+    if not nivel:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nível hierárquico com ID {colaborador.nivel_id} não encontrado"
+        )
+
+    # Validar subnivel_id se especificado
+    if colaborador.subnivel_id is not None:
+        subnivel = db.query(Subnivel).filter(Subnivel.id == colaborador.subnivel_id).first()
+        if not subnivel:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Subnível com ID {colaborador.subnivel_id} não encontrado"
+            )
+
+        # Verificar se o subnível pertence ao nível hierárquico correto
+        if subnivel.nivel_id != colaborador.nivel_id:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Subnível {subnivel.nome} não pertence ao nível hierárquico selecionado"
+            )
+
     # Validar que o superior existe (se especificado)
     if colaborador.superior_id is not None:
         superior = db.query(Colaborador).filter(Colaborador.id == colaborador.superior_id).first()
@@ -112,6 +144,50 @@ def update_colaborador(
         raise HTTPException(status_code=404, detail="Colaborador não encontrado")
 
     update_data = colaborador.model_dump(exclude_unset=True)
+
+    # Validar setor_id se está sendo alterado
+    if "setor_id" in update_data:
+        setor_id = update_data["setor_id"]
+        if setor_id is not None:
+            setor = db.query(Setor).filter(Setor.id == setor_id).first()
+            if not setor:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Setor com ID {setor_id} não encontrado"
+                )
+
+    # Validar nivel_id se está sendo alterado
+    if "nivel_id" in update_data:
+        nivel_id = update_data["nivel_id"]
+        if nivel_id is not None:
+            nivel = db.query(NivelHierarquico).filter(NivelHierarquico.id == nivel_id).first()
+            if not nivel:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Nível hierárquico com ID {nivel_id} não encontrado"
+                )
+
+    # Validar subnivel_id se está sendo alterado
+    if "subnivel_id" in update_data:
+        subnivel_id = update_data["subnivel_id"]
+        if subnivel_id is not None:
+            # Determinar qual nivel_id usar (novo ou atual)
+            nivel_id = update_data.get("nivel_id", db_colaborador.nivel_id)
+
+            # Verificar se o subnível existe
+            subnivel = db.query(Subnivel).filter(Subnivel.id == subnivel_id).first()
+            if not subnivel:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Subnível com ID {subnivel_id} não encontrado"
+                )
+
+            # Verificar se o subnível pertence ao nível hierárquico correto
+            if subnivel.nivel_id != nivel_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Subnível {subnivel.nome} não pertence ao nível hierárquico selecionado"
+                )
 
     # Validação anti-ciclo se superior_id está sendo alterado
     if "superior_id" in update_data:

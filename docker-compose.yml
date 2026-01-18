@@ -1,0 +1,53 @@
+# Docker Compose - AZ TECH Sistema Completo
+# Uso: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # Banco de dados PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: aztech-postgres
+    environment:
+      POSTGRES_USER: aztech
+      POSTGRES_PASSWORD: aztech123
+      POSTGRES_DB: aztech_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aztech -d aztech_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend FastAPI
+  backend:
+    build: ./backend
+    container_name: aztech-backend
+    environment:
+      DATABASE_URL: postgresql://aztech:aztech123@postgres:5432/aztech_db
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend React (opcional - pode usar npm run dev local)
+  # frontend:
+  #   build: .
+  #   container_name: aztech-frontend
+  #   ports:
+  #     - "5173:5173"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   command: npm run dev -- --host
+
+volumes:
+  postgres_data:

@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+/* ============================================================================
+   TEMA AZTECH - Cores e variáveis customizadas
+   ============================================================================ */
+
+@theme {
+  /* Cores institucionais */
+  --color-aztech-primary: #1e40af;
+  --color-aztech-primary-hover: #1e3a8a;
+  --color-aztech-success: #059669;
+  --color-aztech-danger: #dc2626;
+  --color-aztech-warning: #d97706;
+
+  /* Cores dos setores */
+  --color-setor-comercial: #C6EFCE;
+  --color-setor-financeiro: #B4C6E7;
+  --color-setor-rh: #FFF2CC;
+  --color-setor-suprimentos: #FCE4D6;
+  --color-setor-engenharia: #87CEEB;
+  --color-setor-staff: #D3D3D3;
+  --color-setor-pd: #FFCC99;
+  --color-setor-manutencao: #FFFF99;
+
+  /* Cores dos subsetores */
+  --color-subsetor-civil: #90EE90;
+  --color-subsetor-mecanica: #FFB347;
+
+  /* Cores dos níveis hierárquicos */
+  --color-nivel-diretoria: #1e3a5f;
+  --color-nivel-gerencia: #2563eb;
+  --color-nivel-coordenacao: #059669;
+  --color-nivel-supervisao: #ca8a04;
+  --color-nivel-assistente: #6b7280;
+}
+
+/* ============================================================================
+   ESTILOS BASE
+   ============================================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   SCROLLBAR CUSTOMIZADA
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ============================================================================
+   FOCUS VISÍVEL - Acessibilidade
+   ============================================================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-aztech-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   TRANSIÇÕES GLOBAIS
+   ============================================================================ */
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 0.2s ease-in-out;
+}

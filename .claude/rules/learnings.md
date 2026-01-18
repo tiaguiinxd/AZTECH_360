@@ -130,6 +130,47 @@ if colaborador.subnivel_id is not None:
 
 ---
 
+## 2026-01-18 - BUG: Trailing slash em endpoints com path parameters
+
+**Contexto:** Erro 404 "Not Found" ao modificar colaborador via PUT
+
+**Problema:**
+FastAPI retornava 404 ao fazer `PUT /colaboradores/123` porque o frontend estava enviando `PUT /colaboradores/123/` (com trailing slash).
+
+**Causa raiz:**
+A função `apiRequest` adicionava trailing slash a **todos** os endpoints para evitar redirect 307 do FastAPI em endpoints de coleção. Mas isso causava problemas em endpoints com path parameters.
+
+**Diferença entre endpoints:**
+- Coleção: `GET /colaboradores/` ✅ (precisa de trailing slash)
+- Recurso: `GET /colaboradores/123` ✅ (NÃO deve ter trailing slash)
+- Recurso errado: `GET /colaboradores/123/` ❌ (FastAPI retorna 404)
+
+**Solução:**
+Detectar endpoints com path parameters e NÃO adicionar trailing slash:
+
+```typescript
+// Detecta se endpoint tem número no path (path param)
+const hasPathParam = /\/\d+/.test(endpoint)
+
+const normalizedEndpoint = endpoint.endsWith('/') || endpoint.includes('?') || hasPathParam
+  ? endpoint  // Não adiciona slash se já tem, tem query string, ou tem path param
+  : `${endpoint}/`  // Adiciona slash apenas para coleções
+```
+
+**Exemplos:**
+- `/colaboradores` → `/colaboradores/` ✅
+- `/colaboradores/123` → `/colaboradores/123` ✅ (não adiciona slash)
+- `/colaboradores/123/subordinados` → `/colaboradores/123/subordinados` ✅
+
+**Arquivos afetados:** `src/services/api.ts`
+
+**Lições aprendidas:**
+- Trailing slash tem significado diferente em REST APIs
+- FastAPI é estrito sobre trailing slashes em path parameters
+- Regex simples `/\/\d+/` detecta path params numéricos
+
+---
+
 ## Template para Novos Aprendizados
 
 ```markdown

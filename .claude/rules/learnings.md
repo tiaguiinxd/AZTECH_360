@@ -88,6 +88,48 @@ if (!isDataReady) return <Loading />
 
 ---
 
+## 2026-01-18 - BUG: Foreign Key validation no backend
+
+**Contexto:** Erro "erro ao carregar dados" ao modificar colaborador mudando nível + subnível
+
+**Problema:**
+Backend não validava se `subnivel_id` pertence ao `nivel_id` correto. Quando usuário mudava o nível e tentava atribuir um subnível que não pertencia a esse nível, o banco rejeitava a operação por violação de FK constraint.
+
+**Causa raiz:**
+1. Modelo `Colaborador` tem FK para `subniveis.id`
+2. Modelo `Subnivel` tem FK para `niveis_hierarquicos.id`
+3. Backend não validava a relação entre subnível e nível
+4. Banco rejeitava silenciosamente, frontend mostrava mensagem genérica
+
+**Solução:**
+Adicionar validação explícita no backend antes de salvar:
+
+```python
+# Validar subnivel_id se especificado
+if colaborador.subnivel_id is not None:
+    nivel_id = update_data.get("nivel_id", db_colaborador.nivel_id)
+
+    subnivel = db.query(Subnivel).filter(Subnivel.id == colaborador.subnivel_id).first()
+    if not subnivel:
+        raise HTTPException(status_code=400, detail=f"Subnível {id} não encontrado")
+
+    # Verificar se o subnível pertence ao nível correto
+    if subnivel.nivel_id != nivel_id:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Subnível {subnivel.nome} não pertence ao nível hierárquico selecionado"
+        )
+```
+
+**Arquivos afetados:** `backend/app/routers/colaboradores.py`
+
+**Lições aprendidas:**
+- Sempre validar relações de FK no backend ANTES de tentar salvar no banco
+- Retornar mensagens de erro claras para o frontend
+- Não confiar apenas em constraints do banco para validação de regras de negócio
+
+---
+
 ## Template para Novos Aprendizados
 
 ```markdown

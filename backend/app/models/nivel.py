@@ -18,6 +18,7 @@ class NivelHierarquico(Base):
     cor = Column(String(20), nullable=False, default="#6B7280")
     cor_texto = Column(String(20), nullable=False, default="#ffffff")
     ordem = Column(Integer, nullable=False, default=0)
+    ativo = Column(Integer, nullable=False, default=1)  # 1=ativo, 0=inativo (SQLite usa INTEGER para boolean)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

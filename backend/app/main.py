@@ -6,7 +6,20 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .database import engine, Base
-from .routers import setores_router, niveis_router, colaboradores_router, cargos_router, tipos_projeto_router, organo_versions_router
+from .routers import (
+    # Estrutura Organizacional
+    setores_router,
+    niveis_router,
+    colaboradores_router,
+    cargos_router,
+    organo_versions_router,
+    # Planejamento
+    projetos_planejamento_router,
+    # Alocacao (Dashboard)
+    alocacoes_router,
+    # Legacy
+    tipos_projeto_router,
+)
 
 settings = get_settings()
 
@@ -31,13 +44,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
+# Routers - Estrutura Organizacional
 app.include_router(setores_router, prefix=settings.api_prefix)
 app.include_router(niveis_router, prefix=settings.api_prefix)
 app.include_router(colaboradores_router, prefix=settings.api_prefix)
 app.include_router(cargos_router, prefix=settings.api_prefix)
-app.include_router(tipos_projeto_router, prefix=settings.api_prefix)
 app.include_router(organo_versions_router, prefix=settings.api_prefix)
+
+# Routers - Planejamento
+app.include_router(projetos_planejamento_router, prefix=settings.api_prefix)
+
+# Routers - Alocacao (Dashboard)
+app.include_router(alocacoes_router, prefix=settings.api_prefix)
+
+# Legacy (manter por compatibilidade)
+app.include_router(tipos_projeto_router, prefix=settings.api_prefix)
 
 
 @app.get("/")

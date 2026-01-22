@@ -7,6 +7,7 @@
 
 export * from './colaborador'
 export * from './setor'
-export * from './projeto'
 export * from './common'
 export * from './version'
+export * from './planejamento'
+export * from './dashboard'

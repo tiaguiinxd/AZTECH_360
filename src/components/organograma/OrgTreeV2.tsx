@@ -176,7 +176,8 @@ function calculateSubtreeWidth(node: PositionedNode, expandedIds: ID[]): number 
 function calculatePositions(
   nodes: PositionedNode[],
   expandedIds: ID[],
-  startX: number
+  startX: number,
+  nivelIndexMap: Map<number, number>
 ): { maxX: number; maxY: number; usedNivelIds: Set<number> } {
   let maxX = startX
   let maxY = 0
@@ -190,10 +191,9 @@ function calculatePositions(
   // Posicionar nós recursivamente
   // Y é baseado no nivel_id do colaborador (nível hierárquico)
   function positionNode(node: PositionedNode, x: number) {
-    // Y é baseado no NIVEL_ID - colaboradores do mesmo nível ficam alinhados
-    // nivel_id 1 = Diretoria (topo), nivel_id 5 = Operacional (base)
-    // Subtraímos 1 porque nivel_id começa em 1, não em 0
-    const nivelIndex = node.colaborador.nivelId - 1
+    // Y é baseado no ÍNDICE ORDENADO do nível (usando campo 'ordem')
+    // Níveis são ordenados por 'ordem', não por nivel_id
+    const nivelIndex = nivelIndexMap.get(node.colaborador.nivelId) ?? 0
     node.y = PADDING_TOP + nivelIndex * LEVEL_HEIGHT
 
     const isExpanded = expandedIds.includes(node.colaborador.id)
@@ -370,6 +370,7 @@ interface NivelLineInfo {
   nivelId: number
   nivelNome: string
   nivelCor: string
+  ordenIndex: number // Índice baseado no campo 'ordem' (0-based)
 }
 
 // Componente de indicadores de nível (linhas de fundo para cada nível hierárquico)
@@ -382,9 +383,9 @@ const LevelIndicators = memo(function LevelIndicators({
 }) {
   return (
     <>
-      {nivelLineMap.map(({ nivelId, nivelNome, nivelCor }) => {
-        // Y é baseado no nivel_id (nivel_id 1 = linha 0, nivel_id 2 = linha 1, etc.)
-        const y = PADDING_TOP + (nivelId - 1) * LEVEL_HEIGHT
+      {nivelLineMap.map(({ nivelId, nivelNome, nivelCor, ordenIndex }) => {
+        // Y é baseado no índice da ordem configurada (0 = topo, 1 = segunda linha, etc.)
+        const y = PADDING_TOP + ordenIndex * LEVEL_HEIGHT
 
         return (
           <div
@@ -449,30 +450,39 @@ export const OrgTreeV2 = memo(function OrgTreeV2({
   const { tree, connections, visibleNodes, canvasSize, nivelLineMap } = useMemo(() => {
     const tree = buildTree(colaboradores)
 
+    // Criar mapa de nivelId → índice ordenado (usando campo 'ordem')
+    // Níveis ordenados por 'ordem' crescente
+    const niveisOrdenados = [...niveis].sort((a, b) => a.ordem - b.ordem)
+    const nivelIndexMap = new Map<number, number>(
+      niveisOrdenados.map((nivel, index) => [nivel.id, index])
+    )
+
     // Calcular posições (cards começam após PADDING_LEFT)
-    // Agora usamos nivel_id para posição Y, não profundidade
-    const { maxX, maxY, usedNivelIds } = calculatePositions(tree, expandedIds, PADDING_LEFT)
+    // Y é baseado no índice do nível na ordem configurada
+    const { maxX, maxY, usedNivelIds } = calculatePositions(tree, expandedIds, PADDING_LEFT, nivelIndexMap)
 
     // Coletar conexões e nós visíveis
     const connections = collectConnections(tree, expandedIds)
     const visibleNodes = collectVisibleNodes(tree, expandedIds)
 
     // Criar array de informações de nível para cada nivel_id usado
-    // Ordenado por nivel_id (1 = Diretoria no topo, 5 = Operacional na base)
-    const sortedNivelIds = Array.from(usedNivelIds).sort((a, b) => a - b)
-    const nivelLineMap: NivelLineInfo[] = sortedNivelIds.map(nivelId => {
-      const nivel = niveis.find(n => n.id === nivelId)
-      return {
-        nivelId,
-        nivelNome: nivel?.nome || `Nível ${nivelId}`,
-        nivelCor: nivel?.cor || '#6B7280',
-      }
-    })
+    // Ordenado pelo campo 'ordem' (configurável pelo usuário)
+    const niveisUsados = Array.from(usedNivelIds)
+      .map(nivelId => niveis.find(n => n.id === nivelId))
+      .filter((n): n is NonNullable<typeof n> => n !== undefined)
+      .sort((a, b) => a.ordem - b.ordem)
 
-    // Canvas deve acomodar todos os níveis usados
-    // O nível mais alto usado determina a altura mínima
-    const maxNivelId = sortedNivelIds.length > 0 ? Math.max(...sortedNivelIds) : 1
-    const minHeight = PADDING_TOP + (maxNivelId * LEVEL_HEIGHT) + 50
+    const nivelLineMap: NivelLineInfo[] = niveisUsados.map((nivel, index) => ({
+      nivelId: nivel.id,
+      nivelNome: nivel.nome || `Nível ${nivel.id}`,
+      nivelCor: nivel.cor || '#6B7280',
+      ordenIndex: index, // 0 = topo, 1 = segundo, etc.
+    }))
+
+    // Canvas deve acomodar todos os níveis renderizados
+    // Altura baseada no número de níveis visíveis, não no nivelId
+    const numNiveisVisiveis = nivelLineMap.length || 1
+    const minHeight = PADDING_TOP + (numNiveisVisiveis * LEVEL_HEIGHT) + 50
 
     return {
       tree,

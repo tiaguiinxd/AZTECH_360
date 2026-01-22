@@ -33,3 +33,21 @@ export {
   selectIsLoading as selectConfigIsLoading,
   selectError as selectConfigError,
 } from './configStore'
+
+export { useVersionStore } from './versionStore'
+
+export {
+  usePlanejamentoStore,
+  selectProjetos,
+  selectFilters as selectPlanejamentoFilters,
+  selectSelectedId as selectPlanejamentoSelectedId,
+  selectIsLoading as selectPlanejamentoIsLoading,
+  selectError as selectPlanejamentoError,
+  selectHasHydrated as selectPlanejamentoHasHydrated,
+  selectOpcoesEmpresas,
+  selectOpcoesClientes,
+  selectOpcoesCategorias,
+  selectProjetosFiltrados,
+} from './planejamentoStore'
+
+export { useDashboardStore } from './dashboardStore'

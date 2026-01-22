@@ -8,8 +8,9 @@
  * - Adicionar/remover subníveis
  */
 
-import { useState, memo, useCallback } from 'react'
+import { useState, memo, useCallback, useMemo } from 'react'
 import { useShallow } from 'zustand/react/shallow'
+import { closestCenter } from '@dnd-kit/core'
 import { cn } from '@/utils'
 import {
   Plus,
@@ -17,12 +18,12 @@ import {
   Trash2,
   Save,
   X,
-  ChevronDown,
-  ChevronRight,
   GripVertical,
 } from 'lucide-react'
 import { useConfigStore } from '@/stores/configStore'
 import type { NivelHierarquico, Subnivel, ID } from '@/types'
+import { useLevelsDragDrop } from '@/hooks/useLevelsDragDrop'
+import { SortableNivelItem } from './SortableNivelItem'
 
 interface EditingNivel {
   id: ID
@@ -40,19 +41,48 @@ interface EditingSubnivel {
 }
 
 export const NiveisConfig = memo(function NiveisConfig() {
-  const { niveis, updateNivel, addSubnivel, updateSubnivel, removeSubnivel } = useConfigStore(
+  const {
+    niveis,
+    updateNivel,
+    addSubnivel,
+    updateSubnivel,
+    removeSubnivel,
+    reorderNiveis,
+    toggleNivelAtivo
+  } = useConfigStore(
     useShallow((state) => ({
       niveis: state.niveis,
       updateNivel: state.updateNivel,
       addSubnivel: state.addSubnivel,
       updateSubnivel: state.updateSubnivel,
       removeSubnivel: state.removeSubnivel,
+      reorderNiveis: state.reorderNiveis,
+      toggleNivelAtivo: state.toggleNivelAtivo,
     }))
   )
 
   const [expandedNiveis, setExpandedNiveis] = useState<Set<ID>>(new Set())
   const [editingNivel, setEditingNivel] = useState<EditingNivel | null>(null)
   const [editingSubnivel, setEditingSubnivel] = useState<EditingSubnivel | null>(null)
+
+  // Drag-and-drop hook
+  const {
+    sensors,
+    handleDragStart,
+    handleDragEnd,
+    handleDragCancel,
+    sortedNiveis,
+    DndContext,
+    SortableContext,
+    verticalListSortingStrategy,
+  } = useLevelsDragDrop({
+    niveis,
+    onReorder: reorderNiveis,
+    isEnabled: true,
+  })
+
+  // IDs para SortableContext
+  const nivelIds = useMemo(() => sortedNiveis.map((n) => n.id), [sortedNiveis])
 
   // Toggle expanded
   const toggleExpanded = useCallback((id: ID) => {
@@ -130,6 +160,52 @@ export const NiveisConfig = memo(function NiveisConfig() {
     [removeSubnivel]
   )
 
+  // Move up/down handlers
+  const handleMoveUp = useCallback(
+    (nivelId: ID) => {
+      const index = sortedNiveis.findIndex((n) => n.id === nivelId)
+      if (index <= 0) return
+
+      const newOrder = [...sortedNiveis]
+      ;[newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]]
+      reorderNiveis(newOrder.map((n) => n.id))
+    },
+    [sortedNiveis, reorderNiveis]
+  )
+
+  const handleMoveDown = useCallback(
+    (nivelId: ID) => {
+      const index = sortedNiveis.findIndex((n) => n.id === nivelId)
+      if (index === -1 || index === sortedNiveis.length - 1) return
+
+      const newOrder = [...sortedNiveis]
+      ;[newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]]
+      reorderNiveis(newOrder.map((n) => n.id))
+    },
+    [sortedNiveis, reorderNiveis]
+  )
+
+  // Toggle ativo handler
+  const handleToggleAtivo = useCallback(
+    async (nivelId: ID) => {
+      try {
+        await toggleNivelAtivo(nivelId)
+      } catch (error) {
+        console.error('Erro ao alterar status do nível:', error)
+      }
+    },
+    [toggleNivelAtivo]
+  )
+
+  // Edit change handler
+  const handleEditChange = useCallback(
+    (field: string, value: string) => {
+      if (!editingNivel) return
+      setEditingNivel({ ...editingNivel, [field]: value })
+    },
+    [editingNivel]
+  )
+
   return (
     <div className="p-6">
       {/* Info banner */}
@@ -142,133 +218,40 @@ export const NiveisConfig = memo(function NiveisConfig() {
       </div>
 
       {/* Níveis list */}
-      <div className="space-y-3">
-        {niveis.map((nivel) => {
-          const isExpanded = expandedNiveis.has(nivel.id)
-          const isEditing = editingNivel?.id === nivel.id
-          const hasSubniveis = (nivel.subniveis?.length ?? 0) > 0
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <SortableContext items={nivelIds} strategy={verticalListSortingStrategy}>
+          <div className="space-y-3">
+            {sortedNiveis.map((nivel, index) => {
+              const isExpanded = expandedNiveis.has(nivel.id)
+              const isEditing = editingNivel?.id === nivel.id
+              const hasSubniveis = (nivel.subniveis?.length ?? 0) > 0
 
-          return (
-            <div
-              key={nivel.id}
-              className="bg-white rounded-lg border shadow-sm overflow-hidden"
-            >
-              {/* Nivel header */}
-              <div
-                className="flex items-center gap-3 p-4"
-                style={{ backgroundColor: nivel.cor + '20' }}
-              >
-                {/* Expand toggle */}
-                <button
-                  onClick={() => toggleExpanded(nivel.id)}
-                  className="p-1 hover:bg-black/10 rounded transition-colors"
-                  title={isExpanded ? 'Recolher' : 'Expandir'}
+              return (
+                <SortableNivelItem
+                  key={nivel.id}
+                  nivel={nivel}
+                  isExpanded={isExpanded}
+                  isEditing={isEditing}
+                  editingData={editingNivel}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < sortedNiveis.length - 1}
+                  onToggleExpand={() => toggleExpanded(nivel.id)}
+                  onStartEdit={() => startEditNivel(nivel)}
+                  onSaveEdit={saveNivel}
+                  onCancelEdit={() => setEditingNivel(null)}
+                  onEditChange={handleEditChange}
+                  onMoveUp={() => handleMoveUp(nivel.id)}
+                  onMoveDown={() => handleMoveDown(nivel.id)}
+                  onToggleAtivo={() => handleToggleAtivo(nivel.id)}
                 >
-                  {isExpanded ? (
-                    <ChevronDown className="h-5 w-5 text-gray-600" />
-                  ) : (
-                    <ChevronRight className="h-5 w-5 text-gray-600" />
-                  )}
-                </button>
-
-                {/* Drag handle */}
-                <GripVertical className="h-5 w-5 text-gray-400 cursor-grab" />
-
-                {/* Color badge */}
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-                  style={{ backgroundColor: nivel.cor, color: nivel.corTexto }}
-                >
-                  {nivel.nivel}
-                </div>
-
-                {/* Content */}
-                {isEditing ? (
-                  <div className="flex-1 flex items-center gap-3">
-                    <input
-                      type="text"
-                      value={editingNivel.nome}
-                      onChange={(e) =>
-                        setEditingNivel({ ...editingNivel, nome: e.target.value })
-                      }
-                      className="px-2 py-1 text-sm border rounded w-40"
-                      placeholder="Nome"
-                    />
-                    <input
-                      type="text"
-                      value={editingNivel.descricao}
-                      onChange={(e) =>
-                        setEditingNivel({ ...editingNivel, descricao: e.target.value })
-                      }
-                      className="px-2 py-1 text-sm border rounded flex-1"
-                      placeholder="Descrição"
-                    />
-                    <input
-                      type="color"
-                      value={editingNivel.cor}
-                      onChange={(e) =>
-                        setEditingNivel({ ...editingNivel, cor: e.target.value })
-                      }
-                      className="w-8 h-8 rounded cursor-pointer"
-                      title="Cor de fundo"
-                    />
-                    <input
-                      type="color"
-                      value={editingNivel.corTexto}
-                      onChange={(e) =>
-                        setEditingNivel({ ...editingNivel, corTexto: e.target.value })
-                      }
-                      className="w-8 h-8 rounded cursor-pointer"
-                      title="Cor do texto"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">{nivel.nome}</h3>
-                    <p className="text-sm text-gray-500">{nivel.descricao}</p>
-                  </div>
-                )}
-
-                {/* Subniveis count */}
-                {hasSubniveis && !isExpanded && (
-                  <span className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600">
-                    {nivel.subniveis?.length} subnível(is)
-                  </span>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-1">
-                  {isEditing ? (
-                    <>
-                      <button
-                        onClick={saveNivel}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded transition-colors"
-                        title="Salvar"
-                      >
-                        <Save className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setEditingNivel(null)}
-                        className="p-2 text-gray-500 hover:bg-gray-100 rounded transition-colors"
-                        title="Cancelar"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => startEditNivel(nivel)}
-                      className="p-2 text-gray-500 hover:bg-gray-100 rounded transition-colors"
-                      title="Editar nível"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Subniveis section */}
-              {isExpanded && (
+                  {/* Subniveis section */}
+                  {isExpanded && (
                 <div className="p-4 bg-gray-50 border-t">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="text-sm font-medium text-gray-700">
@@ -439,10 +422,12 @@ export const NiveisConfig = memo(function NiveisConfig() {
                     )}
                 </div>
               )}
-            </div>
-          )
-        })}
-      </div>
+                </SortableNivelItem>
+              )
+            })}
+          </div>
+        </SortableContext>
+      </DndContext>
     </div>
   )
 })

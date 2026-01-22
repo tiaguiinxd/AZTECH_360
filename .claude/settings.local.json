@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(cd:*)",
+      "Bash(Start-Process \"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\" -WindowStyle Hidden)",
+      "Bash(cmd.exe /c \"start \"\"\"\" \"\"C:\\\\Program Files\\\\Docker\\\\Docker\\\\Docker Desktop.exe\"\"\")",
+      "Bash(start npm run dev)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(tasklist /FI \"IMAGENAME eq Docker Desktop.exe\")",
+      "Bash(findstr:*)",
+      "Bash(tasklist:*)",
+      "Bash(wmic process where \"name like ''%%docker%%''\" get name,processid)",
+      "Skill(new-feature)",
+      "Skill(new-feature:*)",
+      "Bash(Remove-Item -Recurse -Force src/features/servicos)",
+      "Bash(python scripts/insert_previsao_2026.py:*)",
+      "Bash(python:*)"
     ]
   }
 }

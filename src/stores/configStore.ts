@@ -51,6 +51,8 @@ interface ConfigState {
   updateSubnivel: (nivelId: ID, subnivelId: ID, updates: Partial<Omit<Subnivel, 'id'>>) => void
   removeSubnivel: (nivelId: ID, subnivelId: ID) => void
   reorderSubniveis: (nivelId: ID, orderedIds: ID[]) => void
+  reorderNiveis: (orderedIds: ID[]) => Promise<void>
+  toggleNivelAtivo: (id: ID) => Promise<void>
 
   // Actions - Setores
   addSetor: (setor: Omit<Setor, 'id'>) => Setor
@@ -260,6 +262,45 @@ export const useConfigStore = create<ConfigState>()(
             return { ...n, subniveis: reordered }
           }),
         }))
+      },
+
+      reorderNiveis: async (orderedIds) => {
+        set({ isLoading: true, error: null })
+        try {
+          await niveisApi.reorder(orderedIds)
+          // Atualizar ordem local após sucesso
+          set((state) => ({
+            niveis: orderedIds
+              .map((id, index) => {
+                const nivel = state.niveis.find((n) => n.id === id)
+                return nivel ? { ...nivel, ordem: index + 1 } : null
+              })
+              .filter((n): n is NivelHierarquico => n !== null),
+            isLoading: false,
+          }))
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Erro ao reordenar níveis',
+            isLoading: false,
+          })
+        }
+      },
+
+      toggleNivelAtivo: async (id) => {
+        set({ isLoading: true, error: null })
+        try {
+          const updatedNivel = await niveisApi.toggleAtivo(id)
+          const nivel = apiToNivel(updatedNivel)
+          set((state) => ({
+            niveis: state.niveis.map((n) => (n.id === id ? nivel : n)),
+            isLoading: false,
+          }))
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Erro ao alterar status do nível',
+            isLoading: false,
+          })
+        }
       },
 
       // Setores Actions (local por enquanto, pode ser expandido para API)

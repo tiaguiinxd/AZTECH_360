@@ -5,6 +5,27 @@
 
 ---
 
+## 🗺️ MAPA DO SISTEMA (CONSULTAR PRIMEIRO!)
+
+**ANTES de qualquer implementação ou investigação, consulte:**
+
+📄 **[`.claude/SYSTEM_MAP.md`](.claude/SYSTEM_MAP.md)** - Contém:
+- Checklist pré-implementação obrigatório
+- Matriz de dependências entre módulos
+- Mapeamento Entidade → Store → Router
+- Regras de consistência do sistema
+- Guia de troubleshooting
+
+📚 **[`.claude/LEARNINGS.md`](.claude/LEARNINGS.md)** - Contém:
+- Bugs corrigidos e como evitá-los
+- Padrões estabelecidos no projeto
+- Dicas e armadilhas conhecidas
+- **MEMÓRIA PERSISTENTE entre sessões**
+
+> ⚠️ **REGRA:** Nenhuma feature/fix deve ser implementada sem verificar SYSTEM_MAP e LEARNINGS primeiro.
+
+---
+
 ## CONTEXTO
 
 **AZ TECH Soluções e Engenharia** - Empresa brasileira de engenharia industrial.
@@ -53,6 +74,7 @@
 ### FASE 1: CONTEXTO (Antes de começar)
 ```
 □ Ler este CLAUDE.md
+□ Consultar SYSTEM_MAP.md (dependências, entidades, stores)
 □ Verificar todo list pendente
 □ Analisar system-reminders de arquivos modificados
 ```
@@ -135,6 +157,7 @@
 
 Antes de responder ao usuário, verifique:
 ```
+[ ] Consultei SYSTEM_MAP.md?
 [ ] Entendi o que foi pedido?
 [ ] Consultei o código relevante?
 [ ] Criei/atualizei todo list?
@@ -148,6 +171,7 @@ Antes de responder ao usuário, verifique:
 
 | Documento | O Que Contém |
 |-----------|--------------|
+| `.claude/SYSTEM_MAP.md` | **⭐ Mapa do sistema - CONSULTAR PRIMEIRO!** |
 | `docs/CHANGELOG.md` | Histórico de mudanças por versão |
 | `docs/PLANO_REVISAO.md` | ADRs e plano de implementação |
 | `docs/FEATURES_COMPLETED.md` | Features funcionando |

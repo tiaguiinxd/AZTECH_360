@@ -3,10 +3,10 @@
  */
 
 import { useState } from 'react'
-import { Users, FolderKanban, LayoutDashboard, Settings } from 'lucide-react'
+import { Users, Calendar, FolderKanban, LayoutDashboard, Settings, GitBranch } from 'lucide-react'
 import { cn } from '@/utils'
 
-export type TabId = 'organograma' | 'projetos' | 'dashboard' | 'configuracoes'
+export type TabId = 'organograma' | 'planejamento' | 'projetos' | 'dashboard' | 'fluxo' | 'configuracoes'
 
 interface Tab {
   id: TabId
@@ -21,6 +21,11 @@ const TABS: Tab[] = [
     icon: <Users className="h-5 w-5" />,
   },
   {
+    id: 'planejamento',
+    label: 'Planejamento',
+    icon: <Calendar className="h-5 w-5" />,
+  },
+  {
     id: 'projetos',
     label: 'Projetos',
     icon: <FolderKanban className="h-5 w-5" />,
@@ -31,8 +36,13 @@ const TABS: Tab[] = [
     icon: <LayoutDashboard className="h-5 w-5" />,
   },
   {
+    id: 'fluxo',
+    label: 'Fluxo',
+    icon: <GitBranch className="h-5 w-5" />,
+  },
+  {
     id: 'configuracoes',
-    label: 'Configurações',
+    label: 'Configuracoes',
     icon: <Settings className="h-5 w-5" />,
   },
 ]

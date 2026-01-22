@@ -24,6 +24,7 @@ export interface Colaborador {
   id: ID
   nome: string
   cargo: string
+  cargoId?: ID // ID do cargo (referência para tabela de cargos)
   email?: string
   telefone?: string
   fotoUrl?: string // URL da foto do colaborador
@@ -34,6 +35,9 @@ export interface Colaborador {
   nivelId: ID
   subnivelId?: ID // Senioridade: 1=Sênior, 2=Pleno, 3=Júnior
   superiorId?: ID
+
+  // Status (opcional para compatibilidade retroativa)
+  ativo?: boolean // Se o colaborador está ativo na empresa (default: true)
 
   // Permissões em projetos
   permissoes: PermissaoProjeto[]
@@ -75,6 +79,7 @@ export interface NivelHierarquico {
   cor: string
   corTexto: string
   ordem: number
+  ativo: number // 1=ativo, 0=inativo (backend usa INTEGER)
   subniveis?: Subnivel[] // Subníveis disponíveis para este nível
 }
 
@@ -89,6 +94,10 @@ export interface Cargo {
   nivelId?: ID
   setorId?: ID
   ordem: number
+  // Campos para módulo de serviços (opcionais para compatibilidade retroativa)
+  funcoesServico?: FuncaoServico[] // Funções que este cargo pode desempenhar em serviços
+  capacidadeProjetos?: number // Quantos projetos este cargo pode gerenciar simultaneamente
+  naoMensurarCapacidade?: boolean // Se true, não conta para cálculo de capacidade
 }
 
 /**

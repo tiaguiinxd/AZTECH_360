@@ -29,6 +29,7 @@ class NivelBase(BaseModel):
     cor: str = "#6B7280"
     cor_texto: str = "#ffffff"
     ordem: int = 0
+    ativo: int = 1
 
 
 class NivelCreate(NivelBase):
@@ -42,6 +43,7 @@ class NivelUpdate(BaseModel):
     cor: str | None = None
     cor_texto: str | None = None
     ordem: int | None = None
+    ativo: int | None = None
 
 
 class NivelResponse(NivelBase):

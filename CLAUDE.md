@@ -82,6 +82,29 @@ Verificar status geral do projeto.
 ### /learn [aprendizado]
 Registrar novo aprendizado no sistema de memória.
 
+### /health-check [área]
+Diagnóstico completo da saúde do sistema.
+
+**Áreas de análise:**
+- `frontend` - Componentes React, Tailwind, acessibilidade
+- `backend` - Segurança, consistência API, performance
+- `arquitetura` - Camadas, dependências, acoplamento
+- `seguranca` - Vulnerabilidades, validações, CORS
+- `codigo-morto` - Arquivos órfãos, código não utilizado
+- (vazio) - Análise completa de todas as áreas
+
+**Coordena agents:**
+- architect → Análise estrutural
+- frontend → Qualidade de código React
+- reviewer → Revisão de backend e segurança
+
+**Saída:**
+- Relatório com issues categorizados (CRÍTICO, ALERTA, SUGESTÃO)
+- Métricas do projeto
+- Próximas ações recomendadas
+
+**Frequência recomendada:** Semanal ou antes de deploys
+
 ---
 
 ## Subagents Disponíveis

@@ -14,8 +14,6 @@ import {
   Minimize2,
   RotateCcw,
   Filter,
-  UserPlus,
-  Save,
 } from 'lucide-react'
 import { cn } from '@/utils'
 import type { ID } from '@/types'
@@ -43,10 +41,7 @@ interface OrgToolbarProps {
   // Actions
   onExpandAll: () => void
   onCollapseAll: () => void
-  onAddColaborador?: () => void
   onResetData?: () => void
-  onSaveToCode?: () => void
-  isSaving?: boolean
 
   // Sync (ADR-006)
   syncStatus?: SyncStatus
@@ -64,10 +59,7 @@ export const OrgToolbar = memo(function OrgToolbar({
   onClearFilters,
   onExpandAll,
   onCollapseAll,
-  onAddColaborador,
   onResetData,
-  onSaveToCode,
-  isSaving = false,
   syncStatus,
   className,
 }: OrgToolbarProps) {
@@ -198,39 +190,6 @@ export const OrgToolbar = memo(function OrgToolbar({
 
       {/* Separator */}
       <div className="h-6 w-px bg-gray-300 mx-2" />
-
-      {/* Add Colaborador */}
-      {onAddColaborador && (
-        <button
-          onClick={onAddColaborador}
-          className={cn(
-            'flex items-center gap-2 px-4 py-2 text-sm',
-            'bg-aztech-primary text-white',
-            'hover:bg-aztech-primary-hover rounded-lg transition-colors'
-          )}
-        >
-          <UserPlus className="h-4 w-4" />
-          Novo Colaborador
-        </button>
-      )}
-
-      {/* Save to Code */}
-      {onSaveToCode && (
-        <button
-          onClick={onSaveToCode}
-          disabled={isSaving}
-          className={cn(
-            'flex items-center gap-2 px-4 py-2 text-sm',
-            'bg-green-600 text-white',
-            'hover:bg-green-700 rounded-lg transition-colors',
-            'disabled:opacity-50 disabled:cursor-not-allowed'
-          )}
-          title="Salvar alterações no código-fonte"
-        >
-          <Save className={cn('h-4 w-4', isSaving && 'animate-pulse')} />
-          {isSaving ? 'Salvando...' : 'Salvar no Código'}
-        </button>
-      )}
 
       {/* Reset */}
       {onResetData && (

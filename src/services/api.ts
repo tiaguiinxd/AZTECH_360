@@ -155,7 +155,7 @@ export const colaboradoresApi = {
     if (filters?.setor_id) params.append('setor_id', String(filters.setor_id))
     if (filters?.nivel_id) params.append('nivel_id', String(filters.nivel_id))
     const query = params.toString() ? `?${params.toString()}` : ''
-    return apiRequest<ColaboradorAPI[]>(`/colaboradores${query}`)
+    return apiRequest<ColaboradorAPI[]>(`/colaboradores/${query}`)
   },
   get: (id: number) => apiRequest<ColaboradorAPI>(`/colaboradores/${id}`),
   create: (data: Omit<ColaboradorAPI, 'id' | 'created_at' | 'updated_at'>) =>
@@ -541,6 +541,7 @@ export interface ProjetoPlanejamentoAPI {
   data_fim_real: string | null
   status: StatusProjetoAPI
   percentual_conclusao: number
+  funcoes_nao_necessarias: string[]
   created_at: string
   updated_at: string
 }
@@ -606,6 +607,7 @@ export function apiToProjeto(api: ProjetoPlanejamentoAPI): Projeto {
     dataFimReal: api.data_fim_real,
     status: api.status as StatusProjeto,
     percentualConclusao: api.percentual_conclusao,
+    funcoesNaoNecessarias: api.funcoes_nao_necessarias ?? [],
     criadoEm: api.created_at,
     atualizadoEm: api.updated_at,
   }
@@ -631,6 +633,7 @@ export function projetoToApi(p: Projeto): Omit<ProjetoPlanejamentoAPI, 'id' | 'c
     data_fim_real: p.dataFimReal,
     status: p.status,
     percentual_conclusao: p.percentualConclusao,
+    funcoes_nao_necessarias: p.funcoesNaoNecessarias,
   }
 }
 
@@ -644,7 +647,6 @@ export interface AlocacaoAPI {
   data_inicio: string
   data_fim: string | null
   horas_semanais: number
-  percentual_dedicacao: number
   status: StatusAlocacao
   observacoes: string | null
   created_at: string
@@ -667,7 +669,7 @@ export const alocacoesApi = {
     if (filters?.colaborador_id) params.append('colaborador_id', String(filters.colaborador_id))
     if (filters?.status) params.append('status', filters.status)
     const query = params.toString() ? `?${params.toString()}` : ''
-    return apiRequest<AlocacaoComDetalhesAPI[]>(`/alocacoes${query}`)
+    return apiRequest<AlocacaoComDetalhesAPI[]>(`/alocacoes/${query}`)
   },
   get: (id: number) => apiRequest<AlocacaoAPI>(`/alocacoes/${id}/`),
   create: (data: AlocacaoCreate) =>
@@ -715,7 +717,6 @@ export function apiToAlocacao(api: AlocacaoAPI): Alocacao {
     data_inicio: api.data_inicio,
     data_fim: api.data_fim,
     horas_semanais: api.horas_semanais,
-    percentual_dedicacao: api.percentual_dedicacao,
     status: api.status,
     observacoes: api.observacoes,
     created_at: api.created_at,

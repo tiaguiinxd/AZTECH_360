@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from ..database import get_db
-from ..models import NivelHierarquico, Subnivel
+from ..models import NivelHierarquico, Subnivel, Colaborador
 from ..schemas import NivelCreate, NivelUpdate, NivelResponse, SubnivelResponse
 
 router = APIRouter(prefix="/niveis", tags=["Níveis Hierárquicos"])
@@ -58,6 +58,23 @@ def delete_nivel(nivel_id: int, db: Session = Depends(get_db)):
     db_nivel = db.query(NivelHierarquico).filter(NivelHierarquico.id == nivel_id).first()
     if not db_nivel:
         raise HTTPException(status_code=404, detail="Nível não encontrado")
+
+    # Validar dependencias antes de deletar
+    colab_count = db.query(Colaborador).filter(Colaborador.nivel_id == nivel_id).count()
+    if colab_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar nivel com {colab_count} colaborador(es) vinculado(s). "
+                   f"Realoque-os ou remova-os antes de deletar o nivel."
+        )
+
+    subnivel_count = db.query(Subnivel).filter(Subnivel.nivel_id == nivel_id).count()
+    if subnivel_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar nivel com {subnivel_count} subnivel(is) vinculado(s). "
+                   f"Remova os subniveis antes de deletar o nivel."
+        )
 
     db.delete(db_nivel)
     db.commit()

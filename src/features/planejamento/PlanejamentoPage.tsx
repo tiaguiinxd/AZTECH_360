@@ -9,8 +9,9 @@ import { useShallow } from 'zustand/react/shallow'
 import { Plus, RefreshCw, Calendar, AlertCircle } from 'lucide-react'
 import { cn } from '@/utils'
 import { usePlanejamentoStore } from '@/stores/planejamentoStore'
+import { useDashboardStore } from '@/stores/dashboardStore'
 import type { Projeto } from '@/types/planejamento'
-import { ProjetoCard, ProjetoFilters, ProjetoModal } from './components'
+import { ProjetoTable, ProjetoFilters, ProjetoModal } from './components'
 
 export const PlanejamentoPage = memo(function PlanejamentoPage() {
   // Store state
@@ -45,6 +46,9 @@ export const PlanejamentoPage = memo(function PlanejamentoPage() {
   const setFilters = usePlanejamentoStore((state) => state.setFilters)
   const clearFilters = usePlanejamentoStore((state) => state.clearFilters)
 
+  // Dashboard actions - para carregar alocacoes
+  const fetchAlocacoes = useDashboardStore((state) => state.fetchAlocacoes)
+
   // Local state
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingProjeto, setEditingProjeto] = useState<Projeto | null>(null)
@@ -75,8 +79,10 @@ export const PlanejamentoPage = memo(function PlanejamentoPage() {
     if (_hasHydrated) {
       loadProjetos()
       loadOpcoes()
+      // Carregar todas as alocacoes para exibir badges de equipe
+      fetchAlocacoes()
     }
-  }, [_hasHydrated, loadProjetos, loadOpcoes])
+  }, [_hasHydrated, loadProjetos, loadOpcoes, fetchAlocacoes])
 
   // Handlers
   const handleNewProjeto = useCallback(() => {
@@ -124,7 +130,8 @@ export const PlanejamentoPage = memo(function PlanejamentoPage() {
   const handleRefresh = useCallback(() => {
     loadProjetos()
     loadOpcoes()
-  }, [loadProjetos, loadOpcoes])
+    fetchAlocacoes()
+  }, [loadProjetos, loadOpcoes, fetchAlocacoes])
 
   // Aguardar hidratacao
   if (!_hasHydrated) {
@@ -225,16 +232,11 @@ export const PlanejamentoPage = memo(function PlanejamentoPage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projetosFiltrados.map((projeto) => (
-              <ProjetoCard
-                key={projeto.id}
-                projeto={projeto}
-                onEdit={handleEditProjeto}
-                onDelete={handleDeleteClick}
-              />
-            ))}
-          </div>
+          <ProjetoTable
+            projetos={projetosFiltrados}
+            onEdit={handleEditProjeto}
+            onDelete={handleDeleteClick}
+          />
         )}
       </div>
 

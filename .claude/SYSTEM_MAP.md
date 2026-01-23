@@ -23,9 +23,11 @@ Antes de qualquer mudanca, verificar:
 
 | Modulo | Depende De |
 |--------|------------|
-| **Planejamento** | Nenhuma (entidade independente) |
+| **Planejamento** | Alocacao (visualizacao de equipe), Dashboard Store |
+| **Alocacao** | Colaborador, Projeto (Planejamento) |
+| **Dashboard** | Alocacao, Projeto, Colaborador |
 | **Fluxo** | Colaborador |
-| **Dashboard** | Colaborador (futuro) |
+| **Treinamentos** | Nenhuma (dados estaticos) |
 | **Organograma** | Colaborador, Setor, Nivel, Cargo |
 | **Configuracoes** | Todas as entidades base |
 
@@ -42,6 +44,7 @@ Antes de qualquer mudanca, verificar:
 | Subnivel | configStore | niveis | Subnivel |
 | Cargo | configStore | cargos | Cargo |
 | Projeto (Planejamento) | planejamentoStore | projetos-planejamento | ProjetoPlanejamento |
+| Alocacao | dashboardStore | alocacoes | Alocacao |
 
 ---
 
@@ -156,6 +159,15 @@ Base URL: `http://localhost:8000/api/v1/`
 - `GET /projetos-planejamento/opcoes/clientes/`
 - `GET /projetos-planejamento/opcoes/categorias/`
 
+### Alocacoes (Dashboard)
+- `GET/POST /alocacoes/`
+- `GET/PUT/DELETE /alocacoes/{id}/`
+- `GET /alocacoes/dashboard/resumo-geral/`
+- `GET /alocacoes/dashboard/resumo-empresas/`
+- `GET /alocacoes/dashboard/timeline/`
+- `GET /alocacoes/dashboard/disponibilidade/`
+- `GET /alocacoes/dashboard/sobrecarga-temporal/`
+
 ---
 
 ## Troubleshooting Comum
@@ -179,4 +191,4 @@ Base URL: `http://localhost:8000/api/v1/`
 
 ---
 
-*Ultima atualizacao: Janeiro/2026*
+*Ultima atualizacao: 22/01/2026*

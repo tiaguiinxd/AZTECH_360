@@ -2,10 +2,13 @@
  * ProjetoCard - Card de projeto na lista
  */
 
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo, useEffect } from 'react'
 import { Calendar, DollarSign, Pencil, Trash2, Building2, User } from 'lucide-react'
+import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/utils'
 import type { Projeto, StatusProjeto } from '@/types/planejamento'
+import { useDashboardStore } from '@/stores/dashboardStore'
+import { EquipeBadgeHover } from './EquipeBadgeHover'
 
 interface ProjetoCardProps {
   projeto: Projeto
@@ -42,6 +45,31 @@ export const ProjetoCard = memo(function ProjetoCard({
 }: ProjetoCardProps) {
   const statusConfig = useMemo(() => STATUS_CONFIG[projeto.status], [projeto.status])
 
+  // Dashboard store - Carregar alocacoes
+  const fetchAlocacoes = useDashboardStore((state) => state.fetchAlocacoes)
+
+  // Carregar alocacoes ao montar
+  useEffect(() => {
+    let isMounted = true
+
+    const loadAlocacoes = async () => {
+      try {
+        await fetchAlocacoes(projeto.id, undefined)
+      } catch (err) {
+        if (isMounted) {
+          console.error('Erro ao carregar alocações:', err)
+        }
+      }
+    }
+
+    loadAlocacoes()
+
+    return () => {
+      isMounted = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projeto.id]) // Removido fetchAlocacoes para evitar loop infinito
+
   const handleEdit = useCallback(() => {
     onEdit(projeto)
   }, [onEdit, projeto])
@@ -54,7 +82,7 @@ export const ProjetoCard = memo(function ProjetoCard({
     <div className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
       {/* Header */}
       <div className="px-4 py-3 border-b flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span className="text-sm font-mono text-gray-500">{projeto.codigo}</span>
           <span
             className={cn(
@@ -65,6 +93,7 @@ export const ProjetoCard = memo(function ProjetoCard({
           >
             {statusConfig.label}
           </span>
+          <EquipeBadgeHover projetoId={projeto.id} />
         </div>
         <div className="flex items-center gap-1">
           <button

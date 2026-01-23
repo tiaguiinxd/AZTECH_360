@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.projeto_planejamento import ProjetoPlanejamento, StatusProjeto
+from ..models.alocacao import Alocacao
 from ..schemas.projeto_planejamento import (
     ProjetoPlanejamentoCreate,
     ProjetoPlanejamentoUpdate,
@@ -102,6 +103,15 @@ def delete_projeto(projeto_id: int, db: Session = Depends(get_db)):
     db_projeto = db.query(ProjetoPlanejamento).filter(ProjetoPlanejamento.id == projeto_id).first()
     if not db_projeto:
         raise HTTPException(status_code=404, detail="Projeto nao encontrado")
+
+    # Validar dependencias antes de deletar
+    alocacao_count = db.query(Alocacao).filter(Alocacao.projeto_id == projeto_id).count()
+    if alocacao_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar projeto com {alocacao_count} alocacao(oes) vinculada(s). "
+                   f"Remova as alocacoes antes de deletar o projeto."
+        )
 
     db.delete(db_projeto)
     db.commit()

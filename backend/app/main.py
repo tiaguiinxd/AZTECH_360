@@ -1,8 +1,10 @@
 """
 AZ TECH API - Aplicação Principal
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 
 from .config import get_settings
 from .database import engine, Base
@@ -43,6 +45,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Handler global para IntegrityError (violacoes de constraint do banco)
+@app.exception_handler(IntegrityError)
+async def integrity_error_handler(request: Request, exc: IntegrityError):
+    """
+    Captura violacoes de constraint do banco de dados e retorna
+    erro 400 com mensagem amigavel ao inves de erro 500 generico.
+    """
+    error_msg = str(exc.orig).lower() if exc.orig else str(exc).lower()
+
+    if "foreign key constraint" in error_msg or "violates foreign key" in error_msg:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": "Operacao bloqueada: este registro possui dependencias. "
+                          "Remova as dependencias antes de deletar."
+            }
+        )
+    elif "unique constraint" in error_msg or "duplicate key" in error_msg:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": "Registro duplicado: ja existe um registro com estes dados."
+            }
+        )
+    else:
+        # Fallback generico (nao expor detalhes internos)
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "detail": "Operacao invalida devido a restricoes de integridade do banco de dados."
+            }
+        )
+
 
 # Routers - Estrutura Organizacional
 app.include_router(setores_router, prefix=settings.api_prefix)

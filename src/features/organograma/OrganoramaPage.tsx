@@ -20,12 +20,11 @@ import {
 import { VersionToolbar } from '@/components/organograma/VersionToolbar'
 import { ChangesPanel } from '@/components/organograma/ChangesPanel'
 import { ApprovalDialog } from '@/components/organograma/ApprovalDialog'
-import { useOrganoStore, useConfigStore } from '@/stores'
+import { useOrganoStore } from '@/stores'
 import { useVersionStore } from '@/stores/versionStore'
-import { persistToSource } from '@/services/persistService'
 import type { Colaborador, ID } from '@/types'
 
-type ModalMode = 'view' | 'edit' | 'create' | null
+type ModalMode = 'view' | 'edit' | null
 
 export function OrganoramaPage() {
   // ========== STORES ==========
@@ -52,7 +51,6 @@ export function OrganoramaPage() {
     collapseAll,
     setFilters,
     clearFilters,
-    addColaborador,
     updateColaborador,
     deleteColaborador,
     loadColaboradores,
@@ -64,7 +62,6 @@ export function OrganoramaPage() {
       collapseAll: state.collapseAll,
       setFilters: state.setFilters,
       clearFilters: state.clearFilters,
-      addColaborador: state.addColaborador,
       updateColaborador: state.updateColaborador,
       deleteColaborador: state.deleteColaborador,
       loadColaboradores: state.loadColaboradores,
@@ -114,20 +111,10 @@ export function OrganoramaPage() {
     }))
   )
 
-  // Config store data
-  const { setores, subsetores, niveis } = useConfigStore(
-    useShallow((state) => ({
-      setores: state.setores,
-      subsetores: state.subsetores,
-      niveis: state.niveis,
-    }))
-  )
-
   // ========== LOCAL STATE ==========
 
   const [modalMode, setModalMode] = useState<ModalMode>(null)
   const [editingColaborador, setEditingColaborador] = useState<Colaborador | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
   const [showChangesPanel, setShowChangesPanel] = useState(false)
   const [showApprovalDialog, setShowApprovalDialog] = useState(false)
 
@@ -182,11 +169,6 @@ export function OrganoramaPage() {
     [activeColaboradores]
   )
 
-  const handleAddColaborador = useCallback(() => {
-    setEditingColaborador(null)
-    setModalMode('create')
-  }, [])
-
   const handleCloseModal = useCallback(() => {
     setModalMode(null)
     setEditingColaborador(null)
@@ -195,16 +177,7 @@ export function OrganoramaPage() {
   const handleSave = useCallback(
     async (data: Partial<Colaborador>) => {
       try {
-        if (modalMode === 'create') {
-          await addColaborador({
-            nome: data.nome ?? '',
-            cargo: data.cargo ?? '',
-            setorId: data.setorId ?? 1,
-            nivelId: data.nivelId ?? 5,
-            superiorId: data.superiorId,
-            permissoes: data.permissoes ?? [],
-          })
-        } else if (modalMode === 'edit' && editingColaborador) {
+        if (modalMode === 'edit' && editingColaborador) {
           if (editMode === 'draft') {
             updateDraftColaborador(editingColaborador.id, data)
           } else {
@@ -217,7 +190,7 @@ export function OrganoramaPage() {
         // O erro já é tratado pelo store, apenas logamos aqui
       }
     },
-    [modalMode, editingColaborador, editMode, addColaborador, updateColaborador, updateDraftColaborador, handleCloseModal]
+    [modalMode, editingColaborador, editMode, updateColaborador, updateDraftColaborador, handleCloseModal]
   )
 
   const handleDelete = useCallback(
@@ -276,29 +249,6 @@ export function OrganoramaPage() {
     setShowChangesPanel(false)
   }, [hasUnsavedChanges, discardDraft])
 
-  // Salvar no código-fonte
-  const handleSaveToCode = useCallback(async () => {
-    setIsSaving(true)
-    try {
-      const result = await persistToSource({
-        colaboradores: officialColaboradores,
-        setores,
-        subsetores,
-        niveis,
-      })
-
-      if (result.success) {
-        alert(`Dados salvos com sucesso!\n\n${result.message}`)
-      } else {
-        alert(`Erro ao salvar:\n${result.error}`)
-      }
-    } catch (error) {
-      alert(`Erro inesperado: ${error}`)
-    } finally {
-      setIsSaving(false)
-    }
-  }, [officialColaboradores, setores, subsetores, niveis])
-
   // Keyboard shortcuts para undo/redo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -353,10 +303,7 @@ export function OrganoramaPage() {
         onClearFilters={clearFilters}
         onExpandAll={expandAll}
         onCollapseAll={collapseAll}
-        onAddColaborador={editMode === 'view' ? handleAddColaborador : undefined}
         onResetData={editMode === 'view' ? handleRefresh : undefined}
-        onSaveToCode={editMode === 'view' ? handleSaveToCode : undefined}
-        isSaving={isSaving}
       />
 
       {/* Main Content */}

@@ -12,6 +12,8 @@ import {
   ClipboardList,
   Rocket,
   Play,
+  Target,
+  CheckSquare,
 } from 'lucide-react'
 import type { Fase, SubFase } from '../types'
 import { FASE_CORES } from '../types'
@@ -126,6 +128,44 @@ export function FaseCard({ fase, isExpanded = false, onToggle }: FaseCardProps) 
           ))}
         </div>
       </button>
+
+      {/* Objetivo e Resultados Esperados */}
+      {isExpanded && (
+        <div className="bg-white border-b-2 border-gray-100 p-4 space-y-4">
+          {/* Objetivo */}
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <Target className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                Por que esta fase existe?
+              </h4>
+              <p className="text-sm text-gray-700 leading-relaxed">{fase.objetivo}</p>
+            </div>
+          </div>
+
+          {/* Resultados Esperados */}
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 mt-0.5">
+              <CheckSquare className="h-5 w-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">
+                Resultados esperados ao final desta fase:
+              </h4>
+              <ul className="space-y-1.5">
+                {fase.resultadosEsperados.map((resultado, index) => (
+                  <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
+                    <span className="text-green-500 font-bold select-none mt-0.5">✓</span>
+                    <span>{resultado}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Subfases */}
       {isExpanded && (

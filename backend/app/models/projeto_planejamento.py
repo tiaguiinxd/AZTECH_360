@@ -5,7 +5,7 @@ Representa um projeto/obra da empresa para planejamento.
 Baseado no CSV "PREVISAO 2026".
 """
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Enum as SQLEnum, JSON
 import enum
 
 from ..database import Base
@@ -56,6 +56,11 @@ class ProjetoPlanejamento(Base):
         nullable=False
     )
     percentual_conclusao = Column(Integer, default=0, nullable=False)
+
+    # Funcoes necessarias (para analise de gaps de alocacao)
+    # Lista de funcoes marcadas como "nao necessarias" neste projeto
+    # Ex: ["tecnico", "fiscal"] = este projeto nao precisa de tecnico nem fiscal
+    funcoes_nao_necessarias = Column(JSON, default=list, nullable=False)
 
     # Metadados
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

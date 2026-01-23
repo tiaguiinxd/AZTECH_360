@@ -39,6 +39,10 @@ export interface Projeto {
   status: StatusProjeto
   percentualConclusao: number // 0-100
 
+  // Funcoes necessarias (para analise de gaps)
+  // Lista de funcoes marcadas como "nao necessarias" neste projeto
+  funcoesNaoNecessarias: string[] // FuncaoAlocacao[]
+
   // Metadados
   criadoEm: string
   atualizadoEm: string

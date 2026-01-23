@@ -2,8 +2,8 @@
 Schemas Pydantic: Projeto de Planejamento
 """
 from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
+from typing import Optional, List, Literal
+from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 
 
@@ -14,6 +14,19 @@ class StatusProjeto(str, Enum):
     CONCLUIDO = "concluido"
     CANCELADO = "cancelado"
     PAUSADO = "pausado"
+
+
+# Funcoes permitidas (deve estar sincronizado com FuncaoAlocacao no model alocacao.py)
+FuncaoAlocacaoEnum = Literal[
+    "gerente_projeto",
+    "coordenador",
+    "engenheiro",
+    "tecnico",
+    "encarregado",
+    "auxiliar",
+    "fiscal",
+    "comprador",
+]
 
 
 class ProjetoPlanejamentoBase(BaseModel):
@@ -37,6 +50,27 @@ class ProjetoPlanejamentoBase(BaseModel):
 
     status: StatusProjeto = StatusProjeto.PLANEJADO
     percentual_conclusao: int = Field(0, ge=0, le=100)
+
+    # Funcoes nao necessarias (para analise de gaps)
+    # Lista de funcoes (enum FuncaoAlocacao) que nao sao necessarias neste projeto
+    funcoes_nao_necessarias: List[FuncaoAlocacaoEnum] = Field(default_factory=list)
+
+    @field_validator('funcoes_nao_necessarias')
+    @classmethod
+    def validar_funcoes(cls, v: List[str]) -> List[str]:
+        """Validar que funcoes sao validas e sem duplicatas"""
+        if not v:
+            return []
+
+        # Remover duplicatas mantendo ordem
+        seen = set()
+        unique = []
+        for funcao in v:
+            if funcao not in seen:
+                seen.add(funcao)
+                unique.append(funcao)
+
+        return unique
 
 
 class ProjetoPlanejamentoCreate(ProjetoPlanejamentoBase):
@@ -65,6 +99,8 @@ class ProjetoPlanejamentoUpdate(BaseModel):
 
     status: Optional[StatusProjeto] = None
     percentual_conclusao: Optional[int] = Field(None, ge=0, le=100)
+
+    funcoes_nao_necessarias: Optional[List[FuncaoAlocacaoEnum]] = None
 
 
 class ProjetoPlanejamentoResponse(ProjetoPlanejamentoBase):

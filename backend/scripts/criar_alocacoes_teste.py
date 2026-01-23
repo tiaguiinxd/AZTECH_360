@@ -27,7 +27,7 @@ def get_projetos():
     r = requests.get(f"{API_BASE}/projetos-planejamento/")
     return r.json()
 
-def criar_alocacao(colaborador_id, projeto_id, funcao, data_inicio, data_fim=None, percentual=100):
+def criar_alocacao(colaborador_id, projeto_id, funcao, data_inicio, data_fim=None):
     """Cria uma alocacao"""
     # Converter para datetime ISO format
     if data_inicio and len(data_inicio) == 10:
@@ -42,7 +42,6 @@ def criar_alocacao(colaborador_id, projeto_id, funcao, data_inicio, data_fim=Non
         "data_inicio": data_inicio,
         "data_fim": data_fim,
         "horas_semanais": 40,
-        "percentual_dedicacao": percentual,
         "status": "ativa",
         "observacoes": None
     }

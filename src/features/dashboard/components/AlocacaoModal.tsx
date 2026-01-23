@@ -55,7 +55,6 @@ export const AlocacaoModal = memo(function AlocacaoModal({
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: null,
     horas_semanais: 40,
-    percentual_dedicacao: 100,
     status: 'ativa',
     observacoes: null,
   })
@@ -99,7 +98,6 @@ export const AlocacaoModal = memo(function AlocacaoModal({
           data_inicio: new Date().toISOString().split('T')[0],
           data_fim: null,
           horas_semanais: 40,
-          percentual_dedicacao: 100,
           status: 'ativa',
           observacoes: null,
         })
@@ -124,7 +122,6 @@ export const AlocacaoModal = memo(function AlocacaoModal({
       data_inicio: new Date().toISOString().split('T')[0],
       data_fim: null,
       horas_semanais: 40,
-      percentual_dedicacao: 100,
       status: 'ativa',
       observacoes: null,
     })
@@ -303,26 +300,6 @@ export const AlocacaoModal = memo(function AlocacaoModal({
                   value={formData.horas_semanais}
                   onChange={(e) =>
                     setFormData({ ...formData, horas_semanais: Number(e.target.value) })
-                  }
-                  className={cn(
-                    'w-full px-3 py-2 text-sm',
-                    'border border-gray-300 rounded-lg',
-                    'focus:outline-none focus:ring-2 focus:ring-aztech-primary/50 focus:border-aztech-primary'
-                  )}
-                />
-              </div>
-              <div>
-                <label htmlFor="percentual" className="block text-sm font-medium text-gray-700 mb-1">
-                  Percentual Dedicacao (%)
-                </label>
-                <input
-                  type="number"
-                  id="percentual"
-                  min="1"
-                  max="100"
-                  value={formData.percentual_dedicacao}
-                  onChange={(e) =>
-                    setFormData({ ...formData, percentual_dedicacao: Number(e.target.value) })
                   }
                   className={cn(
                     'w-full px-3 py-2 text-sm',

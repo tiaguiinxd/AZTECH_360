@@ -16,6 +16,14 @@ export const FASES: Fase[] = [
     cor: 'blue',
     icone: 'FileSearch',
     responsaveisPrincipais: ['comercial', 'tecnico', 'suprimentos', 'financeiro'],
+    objetivo:
+      'Transformar uma oportunidade de negócio em uma proposta técnica e comercial viável, qualificando a demanda do cliente e estabelecendo as bases contratuais para o serviço.',
+    resultadosEsperados: [
+      'Contrato assinado com escopo, prazo e valores definidos',
+      'Viabilidade técnica confirmada',
+      'Equipe interna ciente da oportunidade',
+      'Cronograma macro e custos estimados aprovados pelo cliente',
+    ],
     subFases: [
       {
         id: '1.1',
@@ -247,6 +255,15 @@ export const FASES: Fase[] = [
     cor: 'amber',
     icone: 'ClipboardList',
     responsaveisPrincipais: ['engenharia', 'rh', 'suprimentos'],
+    objetivo:
+      'Planejar detalhadamente a execução do serviço, mobilizando recursos, formalizando processos internos e garantindo que todos os requisitos técnicos, humanos e logísticos estejam prontos antes do início das atividades.',
+    resultadosEsperados: [
+      'Cronograma detalhado de execução aprovado',
+      'Equipe técnica alocada e treinada',
+      'Materiais e equipamentos adquiridos ou reservados',
+      'Documentação técnica e permissões obtidas',
+      'Sistema atualizado com serviço em status "Em Preparação"',
+    ],
     subFases: [
       {
         id: '2.1',
@@ -400,6 +417,15 @@ export const FASES: Fase[] = [
     cor: 'purple',
     icone: 'Rocket',
     responsaveisPrincipais: ['todos'],
+    objetivo:
+      'Alinhar expectativas entre AZ TECH e cliente, formalizar o início das atividades e garantir que todas as partes envolvidas estejam cientes do escopo, cronograma, responsabilidades e canais de comunicação.',
+    resultadosEsperados: [
+      'Equipe interna e cliente alinhados sobre escopo e expectativas',
+      'Responsabilidades e pontos focais definidos',
+      'Cronograma e marcos principais acordados',
+      'Canais de comunicação e periodicidade de reuniões estabelecidos',
+      'Serviço oficialmente iniciado com status "Em Execução"',
+    ],
     subFases: [
       {
         id: '3.1',
@@ -545,58 +571,322 @@ export const FASES: Fase[] = [
     id: 'execucao',
     numero: 4,
     titulo: 'EXECUCAO',
-    subtitulo: 'A definir',
+    subtitulo: 'Projetos em Execucao',
     cor: 'green',
     icone: 'Play',
-    responsaveisPrincipais: ['campo', 'engenharia'],
+    responsaveisPrincipais: ['campo', 'engenharia', 'suprimentos', 'financeiro'],
+    objetivo:
+      'Executar as atividades técnicas conforme planejado, monitorando continuamente o progresso, qualidade e aderência ao cronograma, gerenciando riscos e comunicando desvios para garantir a entrega do serviço conforme especificado.',
+    resultadosEsperados: [
+      'Serviço executado conforme especificações técnicas',
+      'Cronograma cumprido ou desvios justificados e gerenciados',
+      'Qualidade validada através de inspeções e testes',
+      'Documentação técnica (relatórios, RDOs, fotos) atualizada',
+      'Cliente informado sobre progresso e eventuais alterações',
+      'Serviço finalizado e pronto para encerramento',
+    ],
     subFases: [
+      // ========================================
+      // 4.1 MOBILIZACAO E INICIO DE ATIVIDADES
+      // ========================================
       {
         id: '4.1',
         codigo: '4.1',
-        titulo: 'Fluxo de Execucao (A Definir)',
-        responsaveis: ['campo', 'engenharia'],
+        titulo: 'Mobilizacao e Inicio de Atividades',
+        responsaveis: ['engenharia', 'rh', 'campo', 'suprimentos'],
         etapas: [
           {
             id: '4.1.1',
             codigo: '4.1.1',
-            acao: 'Acompanhamento diario/semanal',
-            entregavel: 'A definir',
+            acao: 'Mobilizar equipe tecnica para o projeto',
+            entregavel: 'Equipe mobilizada e alocada',
+            detalhes: 'Confirmar disponibilidade, comunicar colaboradores, registrar no sistema de alocacao',
           },
           {
             id: '4.1.2',
             codigo: '4.1.2',
-            acao: 'Medicoes e faturamento',
-            entregavel: 'A definir',
+            acao: 'Instalar infraestrutura de canteiro',
+            entregavel: 'Infraestrutura operacional instalada',
+            detalhes: 'Containers, banheiros, almoxarifado, area de vivencia (quando aplicavel)',
           },
           {
             id: '4.1.3',
             codigo: '4.1.3',
-            acao: 'Gestao de mudancas',
-            entregavel: 'A definir',
+            acao: 'Realizar reuniao de kickoff operacional',
+            entregavel: 'Ata de kickoff com equipe',
+            detalhes: 'Alinhar escopo, prazos, responsabilidades e regras de seguranca com toda equipe',
           },
           {
             id: '4.1.4',
             codigo: '4.1.4',
-            acao: 'Comunicacao com cliente',
-            entregavel: 'A definir',
+            acao: 'Emitir e registrar ART/RRT',
+            entregavel: 'ART/RRT emitidas e registradas',
+            detalhes: 'Responsabilidade tecnica formalizada junto ao CREA/CAU',
           },
           {
             id: '4.1.5',
             codigo: '4.1.5',
-            acao: 'Relatorios de progresso',
-            entregavel: 'A definir',
+            acao: 'Emitir primeiro RDO e confirmar cronograma',
+            entregavel: 'RDO inicial + Cronograma baseline confirmado',
+            detalhes: 'Marcar data de inicio oficial e confirmar marcos do projeto',
+          },
+        ],
+      },
+      // ========================================
+      // 4.2 EXECUCAO E MONITORAMENTO CONTINUO
+      // ========================================
+      {
+        id: '4.2',
+        codigo: '4.2',
+        titulo: 'Execucao e Monitoramento Continuo',
+        responsaveis: ['campo', 'engenharia'],
+        etapas: [
+          {
+            id: '4.2.1',
+            codigo: '4.2.1',
+            acao: 'Executar atividades tecnicas conforme planejamento',
+            entregavel: 'Servicos executados',
+            detalhes: 'Seguir cronograma, especificacoes tecnicas e procedimentos de seguranca',
           },
           {
-            id: '4.1.6',
-            codigo: '4.1.6',
-            acao: 'Gestao de nao-conformidades',
-            entregavel: 'A definir',
+            id: '4.2.2',
+            codigo: '4.2.2',
+            acao: 'Emitir RDO diariamente',
+            entregavel: 'RDO (Relatorio Diario de Obra)',
+            detalhes: 'Registrar atividades, equipe, clima, ocorrencias e avanco do dia',
           },
           {
-            id: '4.1.7',
-            codigo: '4.1.7',
-            acao: 'Encerramento e desmobilizacao',
-            entregavel: 'A definir',
+            id: '4.2.3',
+            codigo: '4.2.3',
+            acao: 'Realizar registro fotografico sistematico',
+            entregavel: 'Acervo fotografico do projeto',
+            detalhes: 'Fotos de antes/durante/depois, evidencias de qualidade e seguranca',
+          },
+          {
+            id: '4.2.4',
+            codigo: '4.2.4',
+            acao: 'Atualizar controle de avanco fisico',
+            entregavel: 'Planilha de avanco atualizada',
+            detalhes: 'Percentual executado por atividade/etapa vs planejado',
+          },
+          {
+            id: '4.2.5',
+            codigo: '4.2.5',
+            acao: 'Controlar horas e recursos da equipe',
+            entregavel: 'Controle de horas/equipe',
+            detalhes: 'Timesheet, controle de HE, afastamentos e produtividade',
+          },
+          {
+            id: '4.2.6',
+            codigo: '4.2.6',
+            acao: 'Identificar e escalar desvios imediatamente',
+            entregavel: 'Alertas de desvio registrados',
+            detalhes: 'Comunicar engenharia/comercial sobre atrasos, problemas tecnicos ou riscos',
+          },
+        ],
+      },
+      // ========================================
+      // 4.3 CONTROLE DE QUALIDADE E CONFORMIDADE
+      // ========================================
+      {
+        id: '4.3',
+        codigo: '4.3',
+        titulo: 'Controle de Qualidade e Conformidade',
+        responsaveis: ['engenharia', 'tecnico'],
+        etapas: [
+          {
+            id: '4.3.1',
+            codigo: '4.3.1',
+            acao: 'Inspecionar qualidade das entregas tecnicas',
+            entregavel: 'Relatorios de inspecao tecnica',
+            detalhes: 'Verificar conformidade com especificacoes, normas e padroes de qualidade',
+          },
+          {
+            id: '4.3.2',
+            codigo: '4.3.2',
+            acao: 'Realizar testes e ensaios necessarios',
+            entregavel: 'Certificados de testes/ensaios',
+            detalhes: 'Testes de pressao, estanqueidade, continuidade, laudos tecnicos',
+          },
+          {
+            id: '4.3.3',
+            codigo: '4.3.3',
+            acao: 'Identificar e registrar nao-conformidades',
+            entregavel: 'Registro de Nao-Conformidade (RNC)',
+            detalhes: 'Documentar desvios, causas e impactos identificados',
+          },
+          {
+            id: '4.3.4',
+            codigo: '4.3.4',
+            acao: 'Implementar acoes corretivas',
+            entregavel: 'Plano de acao corretiva executado',
+            detalhes: 'Corrigir nao-conformidades, documentar solucao e verificar eficacia',
+          },
+          {
+            id: '4.3.5',
+            codigo: '4.3.5',
+            acao: 'Coletar evidencias de conformidade',
+            entregavel: 'Dossiê de evidencias (fotos, laudos)',
+            detalhes: 'Organizar documentacao comprobatoria para entrega ao cliente',
+          },
+        ],
+      },
+      // ========================================
+      // 4.4 MEDICAO E FATURAMENTO
+      // ========================================
+      {
+        id: '4.4',
+        codigo: '4.4',
+        titulo: 'Medicao e Faturamento',
+        responsaveis: ['engenharia', 'comercial', 'financeiro'],
+        etapas: [
+          {
+            id: '4.4.1',
+            codigo: '4.4.1',
+            acao: 'Medir avanco fisico-financeiro do projeto',
+            entregavel: 'Memoria de calculo de avanco',
+            detalhes: 'Levantar quantitativos executados conforme criterios contratuais',
+          },
+          {
+            id: '4.4.2',
+            codigo: '4.4.2',
+            acao: 'Preparar boletim de medicao',
+            entregavel: 'Boletim de medicao mensal',
+            detalhes: 'Documento formal com valores a faturar no periodo',
+          },
+          {
+            id: '4.4.3',
+            codigo: '4.4.3',
+            acao: 'Validar medicao com cliente',
+            entregavel: 'Boletim aprovado pelo cliente',
+            detalhes: 'Obter aceite formal do cliente para liberacao de faturamento',
+          },
+          {
+            id: '4.4.4',
+            codigo: '4.4.4',
+            acao: 'Emitir nota fiscal de servico',
+            entregavel: 'NFS-e emitida',
+            detalhes: 'Faturar conforme medicao aprovada e condicoes contratuais',
+          },
+          {
+            id: '4.4.5',
+            codigo: '4.4.5',
+            acao: 'Controlar recebiveis e inadimplencia',
+            entregavel: 'Controle de recebiveis atualizado',
+            detalhes: 'Acompanhar pagamentos, cobrar atrasos, atualizar fluxo de caixa',
+          },
+          {
+            id: '4.4.6',
+            codigo: '4.4.6',
+            acao: 'Comparar faturamento vs planejado',
+            entregavel: 'Relatorio de faturamento vs orcado',
+            detalhes: 'Analisar desvios financeiros e tomar acoes corretivas',
+          },
+        ],
+      },
+      // ========================================
+      // 4.5 GESTAO DE MUDANCAS E COMUNICACAO
+      // ========================================
+      {
+        id: '4.5',
+        codigo: '4.5',
+        titulo: 'Gestao de Mudancas e Comunicacao com Cliente',
+        responsaveis: ['engenharia', 'comercial'],
+        etapas: [
+          {
+            id: '4.5.1',
+            codigo: '4.5.1',
+            acao: 'Gerenciar solicitacoes de mudanca',
+            entregavel: 'Registro de mudanca aprovado',
+            detalhes: 'Avaliar impacto em escopo, prazo e custo. Obter aprovacao formal',
+          },
+          {
+            id: '4.5.2',
+            codigo: '4.5.2',
+            acao: 'Comunicar progresso ao cliente periodicamente',
+            entregavel: 'Relatorio de progresso semanal/quinzenal',
+            detalhes: 'Status do projeto, marcos atingidos, proximos passos, riscos',
+          },
+          {
+            id: '4.5.3',
+            codigo: '4.5.3',
+            acao: 'Realizar reunioes de acompanhamento',
+            entregavel: 'Atas de reuniao com cliente',
+            detalhes: 'Registrar decisoes, pendencias e responsaveis',
+          },
+          {
+            id: '4.5.4',
+            codigo: '4.5.4',
+            acao: 'Comunicar atrasos e riscos proativamente',
+            entregavel: 'Comunicados oficiais',
+            detalhes: 'Informar cliente sobre problemas antes que perguntem',
+          },
+          {
+            id: '4.5.5',
+            codigo: '4.5.5',
+            acao: 'Documentar decisoes e acordos',
+            entregavel: 'Registro de decisoes',
+            detalhes: 'Formalizar por email ou documento todas as decisoes importantes',
+          },
+        ],
+      },
+      // ========================================
+      // 4.6 ENCERRAMENTO E DESMOBILIZACAO
+      // ========================================
+      {
+        id: '4.6',
+        codigo: '4.6',
+        titulo: 'Encerramento e Desmobilizacao',
+        responsaveis: ['campo', 'engenharia', 'suprimentos'],
+        etapas: [
+          {
+            id: '4.6.1',
+            codigo: '4.6.1',
+            acao: 'Concluir atividades tecnicas pendentes',
+            entregavel: 'Punch list zerado',
+            detalhes: 'Resolver todas as pendencias tecnicas antes do encerramento',
+          },
+          {
+            id: '4.6.2',
+            codigo: '4.6.2',
+            acao: 'Realizar inspecao final e as-built',
+            entregavel: 'Projeto as-built (conforme executado)',
+            detalhes: 'Documentar situacao final com desenhos, fotos e memoriais',
+          },
+          {
+            id: '4.6.3',
+            codigo: '4.6.3',
+            acao: 'Desmontar infraestrutura de canteiro',
+            entregavel: 'Canteiro desmobilizado',
+            detalhes: 'Retirar containers, equipamentos e limpar area',
+          },
+          {
+            id: '4.6.4',
+            codigo: '4.6.4',
+            acao: 'Devolver equipamentos e materiais',
+            entregavel: 'Termo de devolucao de equipamentos',
+            detalhes: 'Devolver ferramentas, EPIs, materiais sobressalentes ao almoxarifado',
+          },
+          {
+            id: '4.6.5',
+            codigo: '4.6.5',
+            acao: 'Compilar documentacao tecnica final',
+            entregavel: 'Dossiê tecnico completo',
+            detalhes: 'Reunir todos os documentos: RDOs, fotos, laudos, certificados, as-built',
+          },
+          {
+            id: '4.6.6',
+            codigo: '4.6.6',
+            acao: 'Registrar licoes aprendidas',
+            entregavel: 'Documento de licoes aprendidas',
+            detalhes: 'O que funcionou, o que melhorar, recomendacoes para proximos projetos',
+          },
+          {
+            id: '4.6.7',
+            codigo: '4.6.7',
+            acao: 'Desmobilizar equipe do projeto',
+            entregavel: 'Equipe liberada/realocada',
+            detalhes: 'Atualizar sistema de alocacao, comunicar RH sobre disponibilidade',
           },
         ],
       },

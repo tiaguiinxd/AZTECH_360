@@ -4,7 +4,7 @@ Endpoints de Setores
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Setor, Subsetor
+from ..models import Setor, Subsetor, Colaborador
 from ..schemas import SetorCreate, SetorUpdate, SetorResponse, SubsetorResponse
 
 router = APIRouter(prefix="/setores", tags=["Setores"])
@@ -57,6 +57,23 @@ def delete_setor(setor_id: int, db: Session = Depends(get_db)):
     db_setor = db.query(Setor).filter(Setor.id == setor_id).first()
     if not db_setor:
         raise HTTPException(status_code=404, detail="Setor não encontrado")
+
+    # Validar dependencias antes de deletar
+    colab_count = db.query(Colaborador).filter(Colaborador.setor_id == setor_id).count()
+    if colab_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar setor com {colab_count} colaborador(es) vinculado(s). "
+                   f"Realoque-os ou remova-os antes de deletar o setor."
+        )
+
+    subsetor_count = db.query(Subsetor).filter(Subsetor.setor_id == setor_id).count()
+    if subsetor_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar setor com {subsetor_count} subsetor(es) vinculado(s). "
+                   f"Remova os subsetores antes de deletar o setor."
+        )
 
     db.delete(db_setor)
     db.commit()

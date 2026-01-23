@@ -33,7 +33,6 @@ class AlocacaoBase(BaseModel):
     data_inicio: datetime
     data_fim: Optional[datetime] = None
     horas_semanais: float = Field(44.0, ge=1, le=60)
-    percentual_dedicacao: float = Field(100.0, ge=0, le=100)
     status: StatusAlocacao = StatusAlocacao.ATIVA
     observacoes: Optional[str] = Field(None, max_length=500)
 
@@ -49,7 +48,6 @@ class AlocacaoUpdate(BaseModel):
     data_inicio: Optional[datetime] = None
     data_fim: Optional[datetime] = None
     horas_semanais: Optional[float] = Field(None, ge=1, le=60)
-    percentual_dedicacao: Optional[float] = Field(None, ge=0, le=100)
     status: Optional[StatusAlocacao] = None
     observacoes: Optional[str] = Field(None, max_length=500)
 
@@ -73,7 +71,6 @@ class AlocacaoComDetalhes(BaseModel):
     data_inicio: datetime
     data_fim: Optional[datetime]
     horas_semanais: float
-    percentual_dedicacao: float
     status: StatusAlocacao
     observacoes: Optional[str]
     created_at: datetime
@@ -141,7 +138,7 @@ class SobrecargaMensal(BaseModel):
     Sobrecarga temporal mensal
 
     Metrica: Media de ocupacao considerando TODOS os colaboradores da empresa.
-    - Soma o percentual_dedicacao de todas as alocacoes de cada colaborador
+    - Calcula ocupacao baseado em horas_semanais (44h = 100%) de todas as alocacoes
     - Divide pelo TOTAL de colaboradores da empresa (incluindo os sem alocacao)
     - Exemplo: 10 colaboradores, 5 com 100% ocupacao = (500% / 10) = 50% de ocupacao media
     - Sobrecarga = True se a media > 100% (indica alocacoes conflitantes)

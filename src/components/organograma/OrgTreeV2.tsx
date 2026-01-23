@@ -441,7 +441,6 @@ export const OrgTreeV2 = memo(function OrgTreeV2({
   onInlineEdit,
 }: OrgTreeV2Props) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [, setDimensions] = useState({ width: 0, height: 0 })
 
   // Carregar níveis do configStore para mostrar nomes significativos
   const niveis = useConfigStore(useShallow(selectNiveis))
@@ -495,22 +494,6 @@ export const OrgTreeV2 = memo(function OrgTreeV2({
       nivelLineMap,
     }
   }, [colaboradores, expandedIds, niveis])
-
-  // Atualizar dimensões do container
-  useEffect(() => {
-    const updateDimensions = () => {
-      if (containerRef.current) {
-        setDimensions({
-          width: containerRef.current.clientWidth,
-          height: containerRef.current.clientHeight,
-        })
-      }
-    }
-
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-    return () => window.removeEventListener('resize', updateDimensions)
-  }, [])
 
   if (tree.length === 0) {
     return (

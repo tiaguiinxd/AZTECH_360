@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models import Colaborador, Setor, NivelHierarquico, Subnivel
+from ..models.alocacao import Alocacao
 from ..schemas import ColaboradorCreate, ColaboradorUpdate, ColaboradorResponse
 
 router = APIRouter(prefix="/colaboradores", tags=["Colaboradores"])
@@ -223,6 +224,23 @@ def delete_colaborador(colaborador_id: int, db: Session = Depends(get_db)):
     db_colaborador = db.query(Colaborador).filter(Colaborador.id == colaborador_id).first()
     if not db_colaborador:
         raise HTTPException(status_code=404, detail="Colaborador não encontrado")
+
+    # Validar dependencias antes de deletar
+    subordinados_count = db.query(Colaborador).filter(Colaborador.superior_id == colaborador_id).count()
+    if subordinados_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar colaborador com {subordinados_count} subordinado(s) vinculado(s). "
+                   f"Realoque os subordinados antes de deletar."
+        )
+
+    alocacao_count = db.query(Alocacao).filter(Alocacao.colaborador_id == colaborador_id).count()
+    if alocacao_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Nao e possivel deletar colaborador com {alocacao_count} alocacao(oes) vinculada(s). "
+                   f"Remova as alocacoes antes de deletar."
+        )
 
     db.delete(db_colaborador)
     db.commit()

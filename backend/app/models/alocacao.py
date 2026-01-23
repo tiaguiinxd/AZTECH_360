@@ -59,7 +59,6 @@ class Alocacao(Base):
 
     # Dedicacao
     horas_semanais = Column(Float, default=44.0, nullable=False)  # Padrao: 44h/semana
-    percentual_dedicacao = Column(Float, default=100.0, nullable=False)  # 0-100%
 
     # Status
     status = Column(

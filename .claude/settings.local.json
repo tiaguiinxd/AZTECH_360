@@ -17,7 +17,10 @@
       "Skill(new-feature:*)",
       "Bash(Remove-Item -Recurse -Force src/features/servicos)",
       "Bash(python scripts/insert_previsao_2026.py:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: Sprint 3 - Dashboard, Fluxo Operacional e Planejamento\n\nNovas funcionalidades:\n- Dashboard de alocação com métricas por empresa\n- Timeline de projetos \\(Gantt\\) com Recharts\n- Gráfico de sobrecarga temporal por setor\n- Módulo de Fluxo Operacional com 63 etapas expandíveis\n- Módulo de Planejamento de projetos\n- CRUD completo de níveis hierárquicos\n- Validação de limite de projetos por setor\n\nBackend:\n- Modelo e router de Alocacoes com endpoints de dashboard\n- Modelo e router de ProjetosPlanejamento\n- 12 migrations para estrutura do banco\n- Script para criar alocações de teste\n\nFrontend:\n- DashboardPage com cards, timeline e disponibilidade\n- FluxoPage com etapas que expandem prazo e checklist\n- PlanejamentoPage com filtros e modal\n- Componentes UI: ConfirmDialog, PrazoIndicator, ProgressBar\n- Stores: dashboardStore, planejamentoStore\n\nDocumentação:\n- LEARNINGS.md - memória persistente de aprendizados\n- SYSTEM_MAP.md - mapa de dependências do sistema\n- Resumos das Sprints 1, 2 e 3\n- Relatório de avaliação UX\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -1,11 +1,26 @@
 /**
  * ProjetoModal - Modal de criacao/edicao de projetos de planejamento
+ *
+ * Organizado em tabs para melhor UX:
+ * - Dados: Informações básicas do projeto
+ * - Cronograma: Datas e progresso
+ * - Equipe: Alocação de colaboradores
  */
 
 import { useState, useEffect, useCallback, useMemo, memo } from 'react'
-import { X, Save, AlertCircle } from 'lucide-react'
+import { X, Save, AlertCircle, FileText, Calendar, Users } from 'lucide-react'
 import { cn } from '@/utils'
 import type { Projeto, StatusProjeto } from '@/types/planejamento'
+import { ProjetoAlocacaoList } from './ProjetoAlocacaoList'
+
+type TabId = 'dados' | 'cronograma' | 'equipe'
+
+interface Tab {
+  id: TabId
+  label: string
+  icon: React.ReactNode
+  editOnly?: boolean // Tab visível apenas em modo de edição
+}
 
 interface ProjetoModalProps {
   isOpen: boolean
@@ -23,6 +38,12 @@ const STATUS_OPTIONS: { value: StatusProjeto; label: string }[] = [
   { value: 'concluido', label: 'Concluido' },
   { value: 'pausado', label: 'Pausado' },
   { value: 'cancelado', label: 'Cancelado' },
+]
+
+const TABS: Tab[] = [
+  { id: 'dados', label: 'Dados', icon: <FileText className="h-4 w-4" /> },
+  { id: 'cronograma', label: 'Cronograma', icon: <Calendar className="h-4 w-4" /> },
+  { id: 'equipe', label: 'Equipe', icon: <Users className="h-4 w-4" />, editOnly: true },
 ]
 
 const initialFormData = {
@@ -55,9 +76,15 @@ export const ProjetoModal = memo(function ProjetoModal({
   const [formData, setFormData] = useState(initialFormData)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabId>('dados')
 
   const isEditing = useMemo(() => projeto !== null, [projeto])
   const title = useMemo(() => (isEditing ? 'Editar Projeto' : 'Novo Projeto'), [isEditing])
+
+  // Tabs disponíveis (filtra "equipe" se não estiver editando)
+  const availableTabs = useMemo(() => {
+    return TABS.filter((tab) => !tab.editOnly || isEditing)
+  }, [isEditing])
 
   useEffect(() => {
     if (projeto) {
@@ -82,12 +109,38 @@ export const ProjetoModal = memo(function ProjetoModal({
       setFormData(initialFormData)
     }
     setError(null)
+    setActiveTab('dados') // Reset tab ao abrir modal
   }, [projeto, isOpen])
 
   const handleChange = useCallback((field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }, [])
+
+  // Keyboard navigation para tabs (acessibilidade WCAG 2.1)
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent, currentTab: TabId) => {
+      const currentIndex = availableTabs.findIndex((t) => t.id === currentTab)
+
+      if (e.key === 'ArrowRight') {
+        e.preventDefault()
+        const nextIndex = (currentIndex + 1) % availableTabs.length
+        setActiveTab(availableTabs[nextIndex].id)
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault()
+        const prevIndex = (currentIndex - 1 + availableTabs.length) % availableTabs.length
+        setActiveTab(availableTabs[prevIndex].id)
+      } else if (e.key === 'Home') {
+        e.preventDefault()
+        setActiveTab(availableTabs[0].id)
+      } else if (e.key === 'End') {
+        e.preventDefault()
+        const lastTab = availableTabs[availableTabs.length - 1].id
+        setActiveTab(lastTab)
+      }
+    },
+    [availableTabs]
+  )
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -179,8 +232,35 @@ export const ProjetoModal = memo(function ProjetoModal({
           </button>
         </div>
 
+        {/* Tabs Navigation */}
+        <div role="tablist" aria-label="Formulário de projeto" className="flex border-b px-6">
+          {availableTabs.map((tab) => (
+            <button
+              key={tab.id}
+              id={`tab-${tab.id}`}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(e) => handleTabKeyDown(e, tab.id)}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`tabpanel-${tab.id}`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              className={cn(
+                'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors',
+                'focus:outline-none focus:ring-2 focus:ring-aztech-primary focus:ring-offset-2',
+                activeTab === tab.id
+                  ? 'border-aztech-primary text-aztech-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              )}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         {/* Content */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(90vh-140px)]">
+        <form onSubmit={handleSubmit} className="overflow-y-auto max-h-[calc(90vh-200px)]">
           <div className="p-6 space-y-4">
             {error && (
               <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
@@ -189,231 +269,290 @@ export const ProjetoModal = memo(function ProjetoModal({
               </div>
             )}
 
-            {/* Codigo e Nome */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Codigo *
-                </label>
-                <input
-                  type="text"
-                  value={formData.codigo}
-                  onChange={(e) => handleChange('codigo', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="PRJ-001"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome *
-                </label>
-                <input
-                  type="text"
-                  value={formData.nome}
-                  onChange={(e) => handleChange('nome', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="Nome do projeto"
-                />
-              </div>
-            </div>
+            {/* ============ TAB: DADOS ============ */}
+            {activeTab === 'dados' && (
+              <div
+                id="tabpanel-dados"
+                role="tabpanel"
+                aria-labelledby="tab-dados"
+                className="space-y-4"
+              >
+                {/* Codigo e Nome */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Codigo *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.codigo}
+                      onChange={(e) => handleChange('codigo', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="PRJ-001"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nome}
+                      onChange={(e) => handleChange('nome', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="Nome do projeto"
+                    />
+                  </div>
+                </div>
 
-            {/* Empresa, Cliente, Categoria */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Empresa *
-                </label>
-                <input
-                  type="text"
-                  list="empresas-list"
-                  value={formData.empresa}
-                  onChange={(e) => handleChange('empresa', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="AZ TECH"
-                />
-                <datalist id="empresas-list">
-                  {opcoesEmpresas.map((emp) => (
-                    <option key={emp} value={emp} />
-                  ))}
-                </datalist>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Cliente *
-                </label>
-                <input
-                  type="text"
-                  list="clientes-list"
-                  value={formData.cliente}
-                  onChange={(e) => handleChange('cliente', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="NGD"
-                />
-                <datalist id="clientes-list">
-                  {opcoesClientes.map((cli) => (
-                    <option key={cli} value={cli} />
-                  ))}
-                </datalist>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoria *
-                </label>
-                <input
-                  type="text"
-                  list="categorias-list"
-                  value={formData.categoria}
-                  onChange={(e) => handleChange('categoria', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="CIVIL"
-                />
-                <datalist id="categorias-list">
-                  {opcoesCategorias.map((cat) => (
-                    <option key={cat} value={cat} />
-                  ))}
-                </datalist>
-              </div>
-            </div>
+                {/* Empresa, Cliente, Categoria */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Empresa *
+                    </label>
+                    <input
+                      type="text"
+                      list="empresas-list"
+                      value={formData.empresa}
+                      onChange={(e) => handleChange('empresa', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="AZ TECH"
+                    />
+                    <datalist id="empresas-list">
+                      {opcoesEmpresas.map((emp) => (
+                        <option key={emp} value={emp} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cliente *
+                    </label>
+                    <input
+                      type="text"
+                      list="clientes-list"
+                      value={formData.cliente}
+                      onChange={(e) => handleChange('cliente', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="NGD"
+                    />
+                    <datalist id="clientes-list">
+                      {opcoesClientes.map((cli) => (
+                        <option key={cli} value={cli} />
+                      ))}
+                    </datalist>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Categoria *
+                    </label>
+                    <input
+                      type="text"
+                      list="categorias-list"
+                      value={formData.categoria}
+                      onChange={(e) => handleChange('categoria', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="CIVIL"
+                    />
+                    <datalist id="categorias-list">
+                      {opcoesCategorias.map((cat) => (
+                        <option key={cat} value={cat} />
+                      ))}
+                    </datalist>
+                  </div>
+                </div>
 
-            {/* Subcategoria e Tipo */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Subcategoria
-                </label>
-                <input
-                  type="text"
-                  value={formData.subcategoria}
-                  onChange={(e) => handleChange('subcategoria', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="Subcategoria (opcional)"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo
-                </label>
-                <input
-                  type="text"
-                  value={formData.tipo}
-                  onChange={(e) => handleChange('tipo', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="Tipo de projeto (opcional)"
-                />
-              </div>
-            </div>
+                {/* Subcategoria e Tipo */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Subcategoria
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.subcategoria}
+                      onChange={(e) => handleChange('subcategoria', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="Subcategoria (opcional)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tipo
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.tipo}
+                      onChange={(e) => handleChange('tipo', e.target.value)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      placeholder="Tipo de projeto (opcional)"
+                    />
+                  </div>
+                </div>
 
-            {/* Descricao */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Descricao
-              </label>
-              <textarea
-                value={formData.descricao}
-                onChange={(e) => handleChange('descricao', e.target.value)}
-                rows={2}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent resize-none"
-                placeholder="Descricao do projeto (opcional)"
-              />
-            </div>
+                {/* Descricao */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descricao
+                  </label>
+                  <textarea
+                    value={formData.descricao}
+                    onChange={(e) => handleChange('descricao', e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent resize-none"
+                    placeholder="Descricao do projeto (opcional)"
+                  />
+                </div>
 
-            {/* Valor e Status */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Valor Estimado (R$)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={formData.valorEstimado}
-                  onChange={(e) => handleChange('valorEstimado', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                  placeholder="0.00"
-                />
+                {/* Valor Estimado */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Valor Estimado (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.valorEstimado}
+                    onChange={(e) => handleChange('valorEstimado', e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => handleChange('status', e.target.value as StatusProjeto)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                >
-                  {STATUS_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Conclusao (%)
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.percentualConclusao}
-                  onChange={(e) => handleChange('percentualConclusao', parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                />
-              </div>
-            </div>
+            )}
 
-            {/* Datas Previstas */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Inicio Previsto
-                </label>
-                <input
-                  type="date"
-                  value={formData.dataInicioPrevista}
-                  onChange={(e) => handleChange('dataInicioPrevista', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Termino Previsto
-                </label>
-                <input
-                  type="date"
-                  value={formData.dataFimPrevista}
-                  onChange={(e) => handleChange('dataFimPrevista', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                />
-              </div>
-            </div>
+            {/* ============ TAB: CRONOGRAMA ============ */}
+            {activeTab === 'cronograma' && (
+              <div
+                id="tabpanel-cronograma"
+                role="tabpanel"
+                aria-labelledby="tab-cronograma"
+                className="space-y-4"
+              >
+                {/* Status e Conclusão */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => handleChange('status', e.target.value as StatusProjeto)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                    >
+                      {STATUS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Conclusao (%)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={formData.percentualConclusao}
+                      onChange={(e) => handleChange('percentualConclusao', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                    />
+                  </div>
+                </div>
 
-            {/* Datas Reais */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Inicio Real
-                </label>
-                <input
-                  type="date"
-                  value={formData.dataInicioReal}
-                  onChange={(e) => handleChange('dataInicioReal', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                {/* Barra de progresso visual */}
+                <div className="bg-gray-100 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-700">Progresso</span>
+                    <span className="text-sm font-bold text-aztech-primary">
+                      {formData.percentualConclusao}%
+                    </span>
+                  </div>
+                  <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-aztech-primary transition-all duration-300"
+                      style={{ width: `${Math.min(formData.percentualConclusao, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Datas Previstas */}
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-3">Datas Previstas</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Inicio Previsto
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dataInicioPrevista}
+                        onChange={(e) => handleChange('dataInicioPrevista', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Termino Previsto
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dataFimPrevista}
+                        onChange={(e) => handleChange('dataFimPrevista', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Datas Reais */}
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-gray-800 mb-3">Datas Reais</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Inicio Real
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dataInicioReal}
+                        onChange={(e) => handleChange('dataInicioReal', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Termino Real
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.dataFimReal}
+                        onChange={(e) => handleChange('dataFimReal', e.target.value)}
+                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ============ TAB: EQUIPE ============ */}
+            {activeTab === 'equipe' && isEditing && projeto && (
+              <div
+                id="tabpanel-equipe"
+                role="tabpanel"
+                aria-labelledby="tab-equipe"
+              >
+                <ProjetoAlocacaoList
+                  projetoId={projeto.id}
+                  projetoCodigo={projeto.codigo}
+                  mode="full"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Termino Real
-                </label>
-                <input
-                  type="date"
-                  value={formData.dataFimReal}
-                  onChange={(e) => handleChange('dataFimReal', e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-aztech-primary focus:border-transparent"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Footer */}

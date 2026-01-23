@@ -9,7 +9,7 @@
 
 import { Header, TabNavigation, useTabNavigation } from '@/components/layout'
 import type { TabId } from '@/components/layout'
-import { OrganoramaPage, ConfiguracoesPage, PlanejamentoPage, DashboardPage } from '@/features'
+import { OrganoramaPage, ConfiguracoesPage, PlanejamentoPage, DashboardPage, TreinamentosPage } from '@/features'
 import { FluxoOperacionalPage } from '@/features/fluxo'
 import { DataProvider } from '@/providers/DataProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -37,6 +37,7 @@ const PAGE_COMPONENTS: Record<TabId, React.ComponentType> = {
   projetos: ProjetosPage,
   dashboard: DashboardPage,
   fluxo: FluxoOperacionalPage,
+  treinamentos: TreinamentosPage,
   configuracoes: ConfiguracoesPage,
 }
 

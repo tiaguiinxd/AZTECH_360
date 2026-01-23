@@ -47,6 +47,8 @@ export interface Fase {
   icone: string
   responsaveisPrincipais: ResponsavelSetor[]
   subFases: SubFase[]
+  objetivo: string // Por que esta fase existe
+  resultadosEsperados: string[] // O que se espera ao final desta fase
 }
 
 export interface MapeamentoSetorFase {

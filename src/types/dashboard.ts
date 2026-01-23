@@ -46,7 +46,6 @@ export interface Alocacao {
   data_inicio: string
   data_fim: string | null
   horas_semanais: number
-  percentual_dedicacao: number
   status: StatusAlocacao
   observacoes: string | null
   created_at: string
@@ -60,7 +59,6 @@ export interface AlocacaoCreate {
   data_inicio: string
   data_fim?: string | null
   horas_semanais?: number
-  percentual_dedicacao?: number
   status?: StatusAlocacao
   observacoes?: string | null
 }
@@ -70,7 +68,6 @@ export interface AlocacaoUpdate {
   data_inicio?: string
   data_fim?: string | null
   horas_semanais?: number
-  percentual_dedicacao?: number
   status?: StatusAlocacao
   observacoes?: string | null
 }

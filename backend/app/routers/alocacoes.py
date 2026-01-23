@@ -120,7 +120,7 @@ def list_alocacoes(
             data_inicio=r.Alocacao.data_inicio,
             data_fim=r.Alocacao.data_fim,
             horas_semanais=r.Alocacao.horas_semanais,
-            percentual_dedicacao=r.Alocacao.percentual_dedicacao,
+            # percentual_dedicacao removido - calculado via horas_semanais se necessário
             status=r.Alocacao.status,
             observacoes=r.Alocacao.observacoes,
             created_at=r.Alocacao.created_at,
@@ -367,37 +367,62 @@ def get_disponibilidade(
     setor_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
 ):
-    """Retorna disponibilidade de colaboradores"""
-    query = db.query(Colaborador)
+    """
+    Retorna disponibilidade de colaboradores.
+
+    OTIMIZADO: Busca colaboradores com JOIN de setor e todas alocacoes ativas
+    em apenas 2 queries (antes: N+1+N queries).
+    """
+    # QUERY 1: Colaboradores com JOIN de setor (1 query)
+    query = (
+        db.query(
+            Colaborador.id,
+            Colaborador.nome,
+            Colaborador.cargo,
+            Colaborador.setor_id,
+            Setor.nome.label("setor_nome"),
+        )
+        .join(Setor, Colaborador.setor_id == Setor.id)
+    )
 
     if setor_id:
         query = query.filter(Colaborador.setor_id == setor_id)
 
-    colaboradores = query.all()
+    colaboradores_com_setor = query.all()
 
-    result = []
-    for c in colaboradores:
-        # Calcular percentual ocupado
-        alocacoes_ativas = (
-            db.query(Alocacao)
-            .filter(
-                Alocacao.colaborador_id == c.id,
-                Alocacao.status == ModelStatusAlocacao.ATIVA,
-            )
-            .all()
+    # QUERY 2: TODAS as alocacoes ativas de uma vez (1 query)
+    colaborador_ids = [c.id for c in colaboradores_com_setor]
+    if not colaborador_ids:
+        return []
+
+    alocacoes_ativas = (
+        db.query(Alocacao)
+        .filter(
+            Alocacao.colaborador_id.in_(colaborador_ids),
+            Alocacao.status == ModelStatusAlocacao.ATIVA,
         )
+        .all()
+    )
 
-        percentual_total = sum(a.percentual_dedicacao for a in alocacoes_ativas)
-        projetos_ativos = len(alocacoes_ativas)
+    # Agrupar alocacoes por colaborador (em memoria)
+    alocacoes_por_colab = {}
+    for a in alocacoes_ativas:
+        if a.colaborador_id not in alocacoes_por_colab:
+            alocacoes_por_colab[a.colaborador_id] = []
+        alocacoes_por_colab[a.colaborador_id].append(a)
 
-        # Buscar nome do setor
-        setor = db.query(Setor).filter(Setor.id == c.setor_id).first()
+    # Processar em memoria
+    result = []
+    for c in colaboradores_com_setor:
+        alocacoes = alocacoes_por_colab.get(c.id, [])
+        percentual_total = sum((a.horas_semanais / 44.0) * 100 for a in alocacoes)
+        projetos_ativos = len(alocacoes)
 
         result.append(DisponibilidadeColaborador(
             colaborador_id=c.id,
             nome=c.nome,
             cargo=c.cargo,
-            setor=setor.nome if setor else "N/A",
+            setor=c.setor_nome,
             percentual_ocupado=min(percentual_total, 100),
             projetos_ativos=projetos_ativos,
             disponivel=percentual_total < 100,
@@ -414,52 +439,64 @@ def get_sobrecarga_temporal(
     """
     Retorna sobrecarga temporal mensal (ocupacao da equipe ao longo dos meses).
     Para cada mes do ano, calcula quantas pessoas estao alocadas e o percentual medio de ocupacao.
+
+    OTIMIZADO: Busca todas alocacoes do ano em 1 query e processa em memoria (antes: 12+ queries).
     """
     from datetime import datetime, timedelta
 
     MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
-    result = []
+    # QUERY 1: Total de colaboradores (1 query)
+    total_colaboradores = db.query(Colaborador).count()
 
+    # QUERY 2: TODAS as alocacoes do ano de uma vez (1 query)
+    inicio_ano = datetime(ano, 1, 1)
+    fim_ano = datetime(ano, 12, 31, 23, 59, 59)
+
+    alocacoes_ano = (
+        db.query(Alocacao)
+        .filter(
+            or_(
+                # Comeca dentro do ano
+                Alocacao.data_inicio.between(inicio_ano, fim_ano),
+                # Termina dentro do ano
+                Alocacao.data_fim.between(inicio_ano, fim_ano),
+                # Cobre o ano inteiro
+                ((Alocacao.data_inicio < inicio_ano) & (
+                    or_(Alocacao.data_fim.is_(None), Alocacao.data_fim > fim_ano)
+                ))
+            )
+        )
+        .all()
+    )
+
+    # Processar em memoria (Python)
+    result = []
     for mes in range(1, 13):
-        # Data inicio e fim do mes
         inicio_mes = datetime(ano, mes, 1)
         if mes == 12:
             fim_mes = datetime(ano + 1, 1, 1) - timedelta(days=1)
         else:
             fim_mes = datetime(ano, mes + 1, 1) - timedelta(days=1)
 
-        # Buscar alocacoes ativas neste mes
-        alocacoes = (
-            db.query(Alocacao)
-            .filter(
-                Alocacao.data_inicio <= fim_mes,
-                or_(
-                    Alocacao.data_fim.is_(None),
-                    Alocacao.data_fim >= inicio_mes
-                ),
-            )
-            .all()
-        )
+        # Filtrar alocacoes do mes (em memoria)
+        alocacoes_mes = [
+            a for a in alocacoes_ano
+            if a.data_inicio <= fim_mes and (a.data_fim is None or a.data_fim >= inicio_mes)
+        ]
 
         # Calcular metricas
-        colaboradores_unicos = set(a.colaborador_id for a in alocacoes)
+        colaboradores_unicos = set(a.colaborador_id for a in alocacoes_mes)
         total_pessoas = len(colaboradores_unicos)
-        total_alocacoes = len(alocacoes)
-
-        # Calcular percentual medio de ocupacao
-        # Soma os percentuais de TODOS os colaboradores da empresa e divide pelo total
-        # Isso garante que colaboradores sem alocacao sejam contados como 0%
-        total_colaboradores = db.query(Colaborador).count()
+        total_alocacoes = len(alocacoes_mes)
 
         if total_colaboradores > 0:
             ocupacao_por_colab = {}
-            for a in alocacoes:
+            for a in alocacoes_mes:
                 if a.colaborador_id not in ocupacao_por_colab:
                     ocupacao_por_colab[a.colaborador_id] = 0
-                ocupacao_por_colab[a.colaborador_id] += a.percentual_dedicacao
+                ocupacao_por_colab[a.colaborador_id] += (a.horas_semanais / 44.0) * 100
 
-            # Media considerando TODOS os colaboradores da empresa
             percentual_ocupacao = sum(ocupacao_por_colab.values()) / total_colaboradores
         else:
             percentual_ocupacao = 0.0

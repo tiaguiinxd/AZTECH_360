@@ -1,338 +1,147 @@
-# Sistema AZ TECH - Guia para Claude Code
+# Sistema AZ TECH - Instruções para Claude Code
 
-## Visão Geral
+> **REGRA FUNDAMENTAL:** Sempre consultar o **código-fonte** e a **API** como fonte da verdade.
+> Nunca confiar em dados estáticos em arquivos .md - eles podem estar desatualizados.
 
-Sistema de gestão empresarial da AZ TECH Soluções e Engenharia com:
-- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS
-- **Backend:** FastAPI + SQLAlchemy + PostgreSQL
-- **Estado:** Zustand com persistência
-- **UI:** Shadcn/ui + Lucide icons
+---
 
-## Estrutura do Projeto
+## WORKFLOW OBRIGATÓRIO
+
+**ANTES de qualquer implementação, siga estas fases:**
+
+### FASE 1: CONTEXTUALIZAÇÃO
+```
+[ ] Consultar .claude/SYSTEM_MAP.md (mapa de dependências)
+[ ] Consultar .claude/LEARNINGS.md (bugs conhecidos e padrões)
+[ ] Verificar API: http://localhost:8000/docs
+[ ] Verificar types em src/types/
+```
+
+### FASE 2: ENTENDIMENTO
+```
+[ ] Ler código relacionado ANTES de modificar
+[ ] Usar Task + Explore agent para mapear codebase
+[ ] Verificar backend/app/models/ para estrutura de dados
+[ ] Verificar backend/app/routers/ para endpoints
+```
+
+### FASE 3: PLANEJAMENTO
+```
+[ ] Criar TodoWrite com tarefas granulares
+[ ] Identificar arquivos que serão modificados
+[ ] Para tarefas complexas: EnterPlanMode
+```
+
+### FASE 4: EXECUÇÃO
+```
+[ ] Uma tarefa por vez (marcar in_progress/completed)
+[ ] Mudanças incrementais
+[ ] Rodar npm run type-check após mudanças
+```
+
+### FASE 5: VERIFICAÇÃO
+```
+[ ] TypeScript sem erros
+[ ] Funcionalidade testada
+[ ] Atualizar LEARNINGS.md se aprendeu algo novo
+```
+
+---
+
+## FONTE DA VERDADE
+
+| O que preciso saber? | Onde consultar? |
+|---------------------|-----------------|
+| Estrutura de dados | `backend/app/models/` |
+| Endpoints da API | `backend/app/routers/` ou `/docs` |
+| Tipos TypeScript | `src/types/` |
+| Stores e estado | `src/stores/` |
+| Dependências entre módulos | `.claude/SYSTEM_MAP.md` |
+| Bugs e padrões conhecidos | `.claude/LEARNINGS.md` |
+
+**NUNCA confiar em:**
+- Arquivos .md com dados estáticos (hierarquias, listas, etc.)
+- Comentários antigos no código
+- Dados hardcoded em arquivos .ts
+
+---
+
+## DECISÕES ARQUITETURAIS (ADRs)
+
+### ADR-004: Fonte Única de Verdade
+**PostgreSQL/API é a ÚNICA fonte de dados.**
+- Frontend carrega dados da API, nunca hardcoda
+- Stores Zustand: `partialize` persiste apenas UI state, não dados de negócio
+
+### ADR-006: Gestão de Colaboradores
+**Criação de colaboradores apenas em Configurações.**
+- Organograma: visualização e edição
+- Configuracoes: criação, edição e exclusão (CRUD completo)
+
+---
+
+## SLASH COMMANDS
+
+| Comando | Uso |
+|---------|-----|
+| `/fix-bug [descrição]` | Investigar e corrigir bug |
+| `/new-feature [descrição]` | Implementar nova funcionalidade |
+| `/review [caminho]` | Revisar código para qualidade |
+| `/status` | Verificar status do projeto |
+| `/health-check [área]` | Diagnóstico completo do sistema |
+| `/learn [aprendizado]` | Registrar aprendizado |
+
+---
+
+## REGRAS CRÍTICAS
+
+### SEMPRE fazer:
+- Consultar código-fonte como fonte da verdade
+- Usar TodoWrite para rastrear progresso
+- Type-check antes de considerar tarefa concluída
+- Registrar aprendizados em `.claude/LEARNINGS.md`
+
+### NUNCA fazer:
+- Confiar em arquivos .md para dados atuais
+- Hardcodar dados no frontend
+- Implementar sem entender o código existente
+- Deixar tarefas in_progress sem resolver
+
+---
+
+## ESTRUTURA RESUMIDA
 
 ```
 aztech-sistema-completo/
-├── .claude/                    # Configurações Claude Code
-│   ├── settings.json          # Permissões, hooks, agents
-│   ├── agents/                # Subagents especializados
-│   ├── commands/              # Slash commands
-│   └── rules/                 # Regras por contexto
+├── .claude/
+│   ├── SYSTEM_MAP.md      # Mapa de dependências
+│   ├── LEARNINGS.md       # Memória persistente
+│   ├── agents/            # Subagents especializados
+│   └── commands/          # Slash commands
 ├── src/
-│   ├── components/            # Componentes reutilizáveis
-│   │   ├── ui/               # Shadcn/ui
-│   │   └── organograma/      # Componentes do organograma
-│   ├── features/             # Features por domínio
-│   │   ├── dashboard/
-│   │   ├── organograma/
-│   │   └── configuracoes/
-│   ├── stores/               # Zustand stores
-│   ├── hooks/                # Custom hooks
-│   ├── services/             # Lógica de negócio
-│   └── types/                # TypeScript types
+│   ├── features/          # Módulos por domínio
+│   ├── stores/            # Zustand stores
+│   ├── services/          # API client
+│   └── types/             # TypeScript types
 ├── backend/
 │   └── app/
-│       ├── models/           # SQLAlchemy models
-│       ├── schemas/          # Pydantic schemas
-│       └── routers/          # API endpoints
-└── docker-compose.yml        # Infra local
+│       ├── models/        # SQLAlchemy models
+│       ├── routers/       # API endpoints
+│       └── schemas/       # Pydantic schemas
+└── docs/                  # Documentação
 ```
 
 ---
 
-## Slash Commands Disponíveis
-
-### /fix-bug [descrição]
-Investigar e corrigir um bug no sistema.
-
-**Workflow:**
-1. Reproduzir o erro
-2. Localizar causa raiz
-3. Implementar correção
-4. Verificar fix
-5. Documentar aprendizado
-
-### /new-feature [descrição]
-Implementar nova funcionalidade.
-
-**Workflow:**
-1. Analisar requisitos
-2. Planejar arquitetura
-3. Implementar
-4. Verificar integração
-5. Documentar
-
-### /review [caminho]
-Revisar código para qualidade e segurança.
-
-**Checklist:**
-- TypeScript sem erros
-- Padrões do projeto
-- Performance
-- Segurança
-
-### /status
-Verificar status geral do projeto.
-
-**Verifica:**
-- TypeScript errors
-- Docker containers
-- Arquivos modificados
-- Pendências
-
-### /learn [aprendizado]
-Registrar novo aprendizado no sistema de memória.
-
-### /health-check [área]
-Diagnóstico completo da saúde do sistema.
-
-**Áreas de análise:**
-- `frontend` - Componentes React, Tailwind, acessibilidade
-- `backend` - Segurança, consistência API, performance
-- `arquitetura` - Camadas, dependências, acoplamento
-- `seguranca` - Vulnerabilidades, validações, CORS
-- `codigo-morto` - Arquivos órfãos, código não utilizado
-- (vazio) - Análise completa de todas as áreas
-
-**Coordena agents:**
-- architect → Análise estrutural
-- frontend → Qualidade de código React
-- reviewer → Revisão de backend e segurança
-
-**Saída:**
-- Relatório com issues categorizados (CRÍTICO, ALERTA, SUGESTÃO)
-- Métricas do projeto
-- Próximas ações recomendadas
-
-**Frequência recomendada:** Semanal ou antes de deploys
-
----
-
-## Subagents Disponíveis
-
-### architect
-**Uso:** Decisões estruturais, design de stores, padrões de projeto.
-
-```
-Use o architect agent para criar novo módulo de relatórios
-```
-
-**Responsabilidades:**
-- Separação de camadas
-- Design de interfaces
-- ADRs (Architecture Decision Records)
-
-### frontend
-**Uso:** UI/UX, componentes React, Tailwind, acessibilidade.
-
-```
-Use o frontend agent para criar componente de dashboard
-```
-
-**Responsabilidades:**
-- Componentes React
-- Tailwind CSS
-- Responsividade
-- Acessibilidade
-
-### testing
-**Uso:** Testes automatizados, cobertura, qualidade.
-
-```
-Use o testing agent para escrever testes do serviço de validação
-```
-
-**Responsabilidades:**
-- Testes unitários (Vitest)
-- Testes de componentes (Testing Library)
-- Cobertura de código
-
-### reviewer
-**Uso:** Code review, identificar bugs, sugerir melhorias.
-
-```
-Use o reviewer agent para revisar os arquivos modificados
-```
-
-**Responsabilidades:**
-- Identificar code smells
-- Verificar padrões
-- Sugerir refatorações
-
----
-
-## Regras do Projeto
-
-### TypeScript
-- Sem `any` não justificado
-- Interfaces para props de componentes
-- Types em `/types/` ou colocados com feature
-- Zod para validação de runtime
-
-### React
-- Hooks SEMPRE antes de returns
-- useMemo para cálculos derivados
-- useCallback para funções passadas como props
-- useShallow nos selectors Zustand
-
-### Tailwind
-- Sem inline styles
-- Tokens de cor: `bg-aztech-*`, `text-aztech-*`
-- Mobile-first (sm:, md:, lg:)
-- Classes ordenadas: layout → spacing → visual
-
-### Stores (Zustand)
-- Um store por domínio
-- Actions assíncronas com try/catch
-- Estado de loading/error
-- `_hasHydrated` para persistência
-
----
-
-## Aprendizados Registrados
-
-### Bug: Hooks chamados após early return
-**Data:** 2025-01-18
-**Arquivo:** ColaboradorModal.tsx
-**Erro:** "Rendered more hooks than during the previous render"
-**Causa:** useMemo estava sendo chamado DEPOIS de `if (!isOpen) return null`
-**Solução:** TODOS os hooks devem ser chamados ANTES de qualquer return
-
-### Bug: Store não hidratada
-**Data:** 2025-01-18
-**Arquivo:** ColaboradorModal.tsx, OrgNode.tsx
-**Erro:** Tela branca ao editar colaborador
-**Causa:** Componente renderizava antes do Zustand hidratar do localStorage
-**Solução:** Verificar `hasHydrated` antes de renderizar dados dependentes
-
-### Bug: Promises não tratadas
-**Data:** 2025-01-18
-**Arquivo:** OrganoramaPage.tsx
-**Erro:** "erro inesperado recarregue a página"
-**Causa:** Funções async do store chamadas sem await/try-catch
-**Solução:** Handlers devem ser async com try/catch
-
----
-
-## Comandos Úteis
+## COMANDOS ÚTEIS
 
 ```bash
 # Desenvolvimento
-npm run dev              # Inicia Vite dev server
-npm run type-check       # Verifica TypeScript
-npm test                 # Roda testes
-
-# Docker
-docker-compose up -d     # Sobe containers
-docker-compose logs -f   # Ver logs
-docker-compose down      # Para containers
-
-# Git
-git status               # Ver mudanças
-git diff                 # Ver diferenças
+npm run dev              # Frontend dev server
+npm run type-check       # Verificar TypeScript
+docker-compose up -d     # Subir backend + DB
 ```
 
 ---
 
-## Hooks Configurados
-
-### PostToolUse (Edit|Write)
-Após editar/criar arquivo, lembra de rodar type-check.
-
-### PreToolUse (Edit)
-Antes de editar, verifica contexto do arquivo.
-
----
-
-## Workflow Recomendado
-
-1. **Entender** - Ler código relacionado antes de modificar
-2. **Planejar** - Usar TodoWrite para tarefas complexas
-3. **Implementar** - Fazer mudanças incrementais
-4. **Verificar** - Rodar type-check após mudanças
-5. **Documentar** - Registrar aprendizados importantes
-
----
-
-## Padrões de Código
-
-### Componente React
-```tsx
-interface CardProps {
-  title: string
-  children: React.ReactNode
-  onAction?: () => void
-}
-
-export function Card({ title, children, onAction }: CardProps) {
-  // Hooks PRIMEIRO
-  const [isOpen, setIsOpen] = useState(false)
-  const derived = useMemo(() => /* ... */, [deps])
-
-  // Handlers
-  const handleClick = useCallback(() => {
-    onAction?.()
-  }, [onAction])
-
-  // Early returns DEPOIS dos hooks
-  if (!title) return null
-
-  // Render
-  return (
-    <div className="rounded-lg bg-white p-4 shadow">
-      <h3 className="text-lg font-semibold">{title}</h3>
-      {children}
-    </div>
-  )
-}
-```
-
-### Zustand Store
-```typescript
-interface FeatureState {
-  items: Item[]
-  isLoading: boolean
-  error: string | null
-  _hasHydrated: boolean
-}
-
-interface FeatureActions {
-  fetchItems: () => Promise<void>
-  addItem: (data: Omit<Item, 'id'>) => Promise<void>
-  setHasHydrated: (state: boolean) => void
-}
-
-export const useFeatureStore = create<FeatureState & FeatureActions>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      isLoading: false,
-      error: null,
-      _hasHydrated: false,
-
-      fetchItems: async () => {
-        set({ isLoading: true, error: null })
-        try {
-          const items = await api.getItems()
-          set({ items, isLoading: false })
-        } catch (error) {
-          set({ error: 'Erro ao carregar', isLoading: false })
-        }
-      },
-
-      setHasHydrated: (state) => set({ _hasHydrated: state }),
-    }),
-    {
-      name: 'feature-storage',
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true)
-      },
-    }
-  )
-)
-```
-
----
-
-## Contato
-
-Projeto mantido pela equipe de TI da AZ TECH Soluções e Engenharia.
+*Sistema AZ TECH - Janeiro/2026*
